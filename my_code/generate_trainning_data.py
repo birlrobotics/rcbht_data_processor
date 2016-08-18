@@ -12,12 +12,12 @@ import data_parser.data_folder_parser as data_folder_parser
 import feature_extractor.data_feature_extractor as data_feature_extractor
 import util.output_features as output_features
 
-import ipdb
-ipdb.set_trace()
+import ipdb, traceback,sys,code
+#ipdb.set_trace()
 
 # Globals
 global DB_PRINT
-DB_PRINT=0
+DB_PRINT=1
 
 ## Flags
 successFlag=0
@@ -127,18 +127,28 @@ if successFlag:
             # Then only return the labels.
             # Currently we take the max number of iterations in any given trial/level/axis.
             allTrialLabels={}
-            for data_folder_name in data_folder_names:        
-                data_feature_extractor.extract_features(dict_all[data_folder_name],folder_dims)
-                allTrialLabels[data_folder_name]=deepcopy(dict_all[data_folder_name])      
+            try:
+                for data_folder_name in data_folder_names:        
+                    data_feature_extractor.extract_features(dict_all[data_folder_name],folder_dims)
+                    allTrialLabels[data_folder_name]=deepcopy(dict_all[data_folder_name])  
+            except:
+                type, value, tb = sys.exc_info()
+                traceback.print_exc()
+                ipdb.post_mortem(tb)
             
             if not os.path.exists(os.path.join(base_dir, '..', 'my_training_data', 'img_of_success')):
                 os.makedirs(os.path.join(base_dir, '..', 'my_training_data', 'img_of_success'))
                     
-            # label 1 indicates SUCCESS. Have a file and a place to put images
-            if output_per_one_trial_flag:
-                output_features.output_sample_one_trial(file_for_success_set, '1', dict_cooked_from_folder, os.path.join(base_dir, '..', 'my_training_data', 'img_of_success'))
-            else:
-                output_features.output_sample_all_trial(file_for_success_set, '1', allTrialLabels,data_folder_names,numTrials,os.path.join(base_dir, '..', 'my_training_data',success_strategy))
+            try:
+                # label 1 indicates SUCCESS. Have a file and a place to put images
+                if output_per_one_trial_flag:
+                    output_features.output_sample_one_trial(file_for_success_set, '1', dict_cooked_from_folder, os.path.join(base_dir, '..', 'my_training_data', 'img_of_success'))
+                else:
+                    output_features.output_sample_all_trial(file_for_success_set, '1', allTrialLabels,data_folder_names,numTrials,os.path.join(base_dir, '..', 'my_training_data',success_strategy))
+            except:
+                type, value, tb = sys.exc_info()
+                traceback.print_exc()
+                ipdb.post_mortem(tb)
         else:
             print 'The success dictionary dict_dims is empty'
     else:
@@ -206,18 +216,28 @@ if failureFlag:
             # Then only return the labels.
             # Currently we take the max number of iterations in any given trial/level/axis.
             allTrialLabels={}
-            for data_folder_name in failure_data_folder_names:        
-                data_feature_extractor.extract_features(dict_all[data_folder_name],folder_dims)
-                allTrialLabels[data_folder_name]=deepcopy(dict_all[data_folder_name]) 
-                           
+            try:
+                for data_folder_name in failure_data_folder_names:        
+                    data_feature_extractor.extract_features(dict_all[data_folder_name],folder_dims)
+                    allTrialLabels[data_folder_name]=deepcopy(dict_all[data_folder_name]) 
+            except:
+                type, value, tb = sys.exc_info()
+                traceback.print_exc()
+                ipdb.post_mortem(tb)
+                
             if not os.path.exists(os.path.join(base_dir, '..', 'my_training_data', 'img_of_fail')):
                  os.makedirs(os.path.join(base_dir, '..', 'my_training_data', 'img_of_fail'))                 
             
             # label 0 indicates SUCCESS. Have a file and a place to put images
-            if output_per_one_trial_flag:
-                output_features.output_sample_one_trial(file_for_fail_set, '0', dict_cooked_from_folder, os.path.join(base_dir, '..', 'my_training_data', 'img_of_failure'))            
-            else:
-                output_features.output_sample_all_trial(file_for_fail_set, '0', allTrialLabels,failure_data_folder_names, numTrials,os.path.join(base_dir, '..', 'my_training_data',failure_strategy))
+            try:
+                if output_per_one_trial_flag:
+                    output_features.output_sample_one_trial(file_for_fail_set, '0', dict_cooked_from_folder, os.path.join(base_dir, '..', 'my_training_data', 'img_of_failure'))            
+                else:
+                    output_features.output_sample_all_trial(file_for_fail_set, '0', allTrialLabels,failure_data_folder_names, numTrials,os.path.join(base_dir, '..', 'my_training_data',failure_strategy))
+            except:
+                type, value, tb = sys.exc_info()
+                traceback.print_exc()
+                ipdb.post_mortem(tb)
         else:
             print 'The failure dictionary dict_dims is empty'
     else:
