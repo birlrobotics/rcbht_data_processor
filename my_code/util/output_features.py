@@ -84,6 +84,12 @@ def output_sample_all_trial(file, label, dict_cooked_allFiles,folder_names,numTr
     global img_name_count
     global initFlag
     
+    # Image Directory
+    if label=='1':
+        img_dir='allTrials_success'
+    else:
+        img_dir='allTrials_failure'
+    
     # Initialization
     output_pixels    = []
     list_of_features = [] # for each level: axis: numLables by numTrials
@@ -93,39 +99,35 @@ def output_sample_all_trial(file, label, dict_cooked_allFiles,folder_names,numTr
     ax =0
     
     for level in levels:
-        initFlag=0 # Used to reset output_width, computed later when folder_name is available
-        ax=0 # reset axis counter
+        initFlag=0  # Used to reset output_width, computed later when folder_name is available
+        ax=0        # reset axis counter
         for axis in axes:
             
             # One file per axis (for each level, for all training examples)            
-            successAxisFile=open( os.path.join(training_data_dir,level[:3]+axis+'.txt'), 'w' )                    
+            axisFile=open( os.path.join(training_data_dir,level[:3]+axis+'.txt'), 'w' )                    
             
             for folder_name in folder_names:
                
                 if dict_cooked_allFiles[folder_name][level][axis] == None:
                     break
-                if not initFlag:
-                    #list_of_features[lev].append([]) # add one more list for the axis level on the first iteration
+                if not initFlag:                    
                     output_width = len(dict_cooked_allFiles[folder_name][level][axis]) 
                     initFlag=1                                  
                 
                 # Extract features for one axis and one level but for all folders
-                import inc.label_mapping as label_mapping                                
-                #list_of_features[lev][ax].append([label_mapping.label_mapping_dict[level][i] for i in dict_cooked_allFiles[folder_name][level][axis]])
+                import inc.label_mapping as label_mapping                                                
                 list_of_features.append([label_mapping.label_mapping_dict[level][i] for i in dict_cooked_allFiles[folder_name][level][axis]])
                 
             # Copy list_of_features to another strcutre where we will change to color
                 
             # Once we have iterated through all the trials for one axis, write to file and display coded map.
-            for trial in range(numTrials):
-                #successAxisFile.write('\t'.join(list_of_features[lev][ax][trial])+'\t')  
-                successAxisFile.write('\t'.join(list_of_features[trial])+'\t')  
-                successAxisFile.write(label+'\n')
+            for trial in range(numTrials):                
+                axisFile.write('\t'.join(list_of_features[trial])+'\t')  
+                axisFile.write(label+'\n')
                 
-                # Create another list of the same dimensions as list_of_features  to store the color encoding for the labels                        
-                #output_pixels.append([kelly_colors_hex[int(i)] for i in list_of_features[lev][ax][trial]])                
+                # Create another list of the same dimensions as list_of_features  to store the color encoding for the labels                                        
                 output_pixels += [kelly_colors_hex[int(i)] for i in list_of_features[trial]]                
-            successAxisFile.close()                        
+            axisFile.close()                        
 
             # Create an image template for the corresponding number of slices and number of trials
             output_img = Image.new("RGB", (output_width, numTrials)) # mode,(width,height)
@@ -134,7 +136,7 @@ def output_sample_all_trial(file, label, dict_cooked_allFiles,folder_names,numTr
             output_img.putdata(output_pixels)
             zoom = 30
             output_img = output_img.resize((output_width*zoom, 6*zoom))
-            output_img.save(os.path.join(training_data_dir,'allTrials_success', level[:3]+axis+'.png'))
+            output_img.save(os.path.join(training_data_dir,img_dir, level[:3]+axis+'.png'))
             
             # Clearing Up            
             output_pixels=[]
