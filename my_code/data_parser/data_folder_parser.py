@@ -2,7 +2,9 @@
 each experiment, three types of data: "Segments, Composites, and llBehaviors. 
 Within each of these folders, it will extract data for each of the six axis: Fx,
 Fy,Fz,Mx,My,Mz", and within each of these axis it will extract the corresponding 
-label, start time, and end time.'''
+label, start time, and end time.
+
+TODO: If one folder throws an exception abandon it and continue to process'''
 
 import os
 import data_file_parser
@@ -47,8 +49,8 @@ def parse_folder(folder_path, split_by_states = False):
 		return dict_cooked_from_folder
 	else:
 		state_file_name = None
-		for file_name in os.listdir(folder_path):
-			if file_name[:5] == 'State':
+		for file_name in os.listdir(folder_path): # iterate through folder names until we find State
+			if file_name[:7] == 'R_State':
 				state_file_name = file_name
 				break
 
@@ -72,7 +74,7 @@ def parse_folder(folder_path, split_by_states = False):
 		# print state_time_mark
 		return splitor(dict_cooked_from_folder, state_time_mark)
 
-				
+''' Looks at the state transition times as well as labels starting and ending times and appropriately splits labels across states'''
 def splitor(dict_cooked_from_folder, state_time_mark):
 	from inc.states import states
 	levels = ['primitive', 'composite', 'llbehavior']

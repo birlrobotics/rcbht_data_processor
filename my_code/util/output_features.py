@@ -64,17 +64,17 @@ def output_sample_one_trial(file, label, dict_cooked_from_folder,img_folder):
             
             # For each label provide an equivallent color.
             output_pixels += [kelly_colors_hex[int(i)] for i in list_of_features]
-    file.write(label+'\n')
-
-    # Create an image template for the corresponding number of slices and 6 axis
-    output_img = Image.new("RGB", (output_width, 6)) # mode,(width,height)
+            file.write(label+'\n')
     
-    # Insert colors int the structure
-    output_img.putdata(output_pixels)
-    zoom = 30
-    output_img = output_img.resize((output_width*zoom, 6*zoom))
-    output_img.save(os.path.join(img_folder, str(img_name_count)+'.png'))
-    img_name_count += 1
+        # Create an image template for the corresponding number of slices and 6 axis
+        output_img = Image.new("RGB", (output_width, 6)) # mode,(width,height)
+        
+        # Insert colors int the structure
+        output_img.putdata(output_pixels)
+        zoom = 30
+        output_img = output_img.resize((output_width*zoom, 6*zoom))
+        output_img.save(os.path.join(img_folder, str(img_name_count)+'.png'))
+        img_name_count += 1
     file.close()
     
 # Prints one image for each axis of all trials. 
@@ -85,10 +85,12 @@ def output_sample_all_trial(file, label, dict_cooked_allFiles,folder_names,numTr
     global initFlag
     
     # Image Directory
-    if label=='1':
+    if label=='s':
         img_dir='allTrials_success'
-    else:
+    elif label=='f':
         img_dir='allTrials_failure'
+    else:
+        img_dir=''
     
     # Initialization
     output_pixels    = []
