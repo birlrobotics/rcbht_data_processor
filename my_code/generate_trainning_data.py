@@ -3,54 +3,84 @@ Composites, and llBehaviors. Each folder must have only 6 files associated with 
 _Fy, _Fz, _Mx, _My, and _Mz. There should also be a State.dat file outside the three folders.
 If more data is encountered it will not be processed at this time.'''
 
+# system
 import os
 import shutil
 
+# General
 from copy import deepcopy
+import cPickle as pickle
 
+# math
+from math import ceil
+import numpy as np 
+
+# Iterations
+import itertools
+
+# parsing
 import util.output_features                     as output_features
 import data_parser.data_folder_parser           as data_folder_parser
 import feature_extractor.data_feature_extractor as data_feature_extractor
 
+# classification
+from sklearn import cross_validation
+from datasketch import MinHash
+
+# debugging
 import ipdb, traceback,sys#,code
 #ipdb.set_trace()
+
+#------------------------------------------------------------------------------
 
 # Globals
 global DB_PRINT
 DB_PRINT=0
 
-## Flags
-successFlag=0
-failureFlag=0
-hlStatesFlag=1
-output_per_one_trial_flag=0 # if true, output is performed for each trial for all axis. Otherwise all trials for each axis is displayed.
+#------------------------------------------------------------------------------
 
-# What kind of success_strategy will you analyze
-success_strategy='SIM_HIRO_ONE_SA_SUCCESS'
-failure_strategy="SIM_HIRO_ONE_SA_ERROR_CHARAC_Prob"
-strategy=success_strategy # default value. used in hblstates
+global states
+global levels
+global axes
 
 # lists
 states=['approach','rotation','insertion','mating']
 levels=['primitive', 'composite', 'llbehavior']
 axes=['Fx','Fy','Fz','Mx','My','Mz']
+train_validate=['train','validate']
+#------------------------------------------------------------------------------
+
+## Flags
+successFlag=0
+failureFlag=0
+hlStatesFlag=1
+classification=1
+
+output_per_one_trial_flag=0 # if true, output is performed for each trial for all axis. Otherwise all trials for each axis is displayed.
+
+#------------------------------------------------------------------------------
+
+# What kind of success_strategy will you analyze
+success_strategy='SIM_HIRO_ONE_SA_SUCCESS_T'
+failure_strategy="SIM_HIRO_ONE_SA_ERROR_CHARAC_Prob"
+strategy=success_strategy # default value. used in hblstates
+
+#------------------------------------------------------------------------------
 
 # Folder names
 data_folder_names=[]        # Filtered to only take relevant folders
 orig_data_folder_names=[]
 failure_data_folder_names=[]
 
-# Dictionary building blocks
-folder_dims={}
-dict_dims={}
-dict_all={}
-allTrialLabels={}
+#------------------------------------------------------------------------------
 
 # Set program paths
 results_dir='/home/vmrguser/sc/research/AIST/Results/ForceControl/'
 cur_dir = os.path.dirname(os.path.realpath(__file__))
 base_dir = cur_dir
 os.chdir(base_dir)
+
+#------------------------------------------------------------------------------
 
 # my training data
 directory='my_training_data'
@@ -75,6 +105,9 @@ if not os.path.exists(os.path.join(base_dir, '..', 'my_training_data',failure_st
 #if not os.path.exists(os.path.join(base_dir, '..', 'my_training_data',hlb,directory)):
 #    os.makedirs(os.path.join(base_dir, '..', 'my_training_data',hlb,directory))        
 
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+
 # What kind of data should we collect?
 # - Success
 # - Failure
@@ -82,6 +115,13 @@ if not os.path.exists(os.path.join(base_dir, '..', 'my_training_data',failure_st
 
 # 1. Get data for success tasks for a given success_strategy
 if successFlag:
+    
+    # Dictionary building blocks
+    folder_dims={}
+    dict_dims={}
+    dict_all={}
+    allTrialLabels={}
+    
     strategy=success_strategy    
     file_for_success_set = open(os.path.join(base_dir, '..', 'my_training_data', strategy, 'training_set_of_success'), 'w')
     
@@ -146,6 +186,13 @@ if successFlag:
                 type, value, tb = sys.exc_info()
                 traceback.print_exc()
                 ipdb.post_mortem(tb)
+                
+            # Save allTrialLabels to File using pickle
+            with open(data_folder_prefix+'/allTrials_success.pickle', 'wb') as handle:
+                pickle.dump(allTrialLabels, handle, protocol=pickle.HIGHEST_PROTOCOL)            
+            # To load use:
+            #with open('filename.pickle', 'rb') as handle:
+            #   unserialized_data = pickle.load(handle)                
             
             if not os.path.exists(os.path.join(base_dir, '..', 'my_training_data', 'img_of_success')):
                 os.makedirs(os.path.join(base_dir, '..', 'my_training_data', 'img_of_success'))
@@ -165,16 +212,18 @@ if successFlag:
     else:
         print 'The success dictionary dict_all is empty' 
     
-    # Clear up
-    folder_dims={}
-    dict_dims={}
-    dict_all={}
-    allTrialLabels={}
 #-------------------------------------------------------------------------
 ##FAILURE ANALYSIS
 #------------------------------------------------------------------------_
     
 if failureFlag:   
+
+    # Initialize structures
+    folder_dims={}
+    dict_dims={}
+    dict_all={}
+    allTrialLabels={}    
+    
     strategy=failure_strategy
     file_for_fail_set = open(os.path.join(base_dir, '..', 'my_training_data', strategy, 'training_set_of_fail'), 'w')    
     
@@ -238,6 +287,13 @@ if failureFlag:
                 traceback.print_exc()
                 ipdb.post_mortem(tb)
                 
+            # Save allTrialLabels to File using pickle
+            with open(data_folder_prefix+'/allTrials_failure.pickle', 'wb') as handle:
+                pickle.dump(allTrialLabels, handle, protocol=pickle.HIGHEST_PROTOCOL)            
+            # To load use:
+            #with open('filename.pickle', 'rb') as handle:
+            #   unserialized_data = pickle.load(handle)                    
+                
             if not os.path.exists(os.path.join(base_dir, '..', 'my_training_data', 'img_of_fail')):
                  os.makedirs(os.path.join(base_dir, '..', 'my_training_data', 'img_of_fail'))                 
             
@@ -266,6 +322,13 @@ if failureFlag:
 ## Parse information by State 
 #-------------------------------------------------------------------------
 if hlStatesFlag:
+    
+    # Initialize structures
+    folder_dims={}
+    dict_dims={}
+    dict_all={}
+    allTrialLabels={}  
+    
     #generate training data from SIM to classify automata states
 
     from inc.states import states
@@ -357,7 +420,14 @@ if hlStatesFlag:
                 allTrialLabels[state]={}
                 for data_folder_name in data_folder_names:
                     allTrialLabels[state][data_folder_name]={}                        
-                    allTrialLabels[state][data_folder_name]=deepcopy(dict_all[data_folder_name][state])                        
+                    allTrialLabels[state][data_folder_name]=deepcopy(dict_all[data_folder_name][state])
+
+            # Save allTrialLabels to File using pickle
+            with open(data_folder_prefix+'/allTrials_hlbStates.pickle', 'wb') as handle:
+                pickle.dump(allTrialLabels, handle, protocol=pickle.HIGHEST_PROTOCOL)            
+            # To load use:
+            #with open('filename.pickle', 'rb') as handle:
+            #   unserialized_data = pickle.load(handle)                            
                         
             ## Create directories to keep both labels and images in file
             for state in dict_cooked_from_folder:
@@ -381,3 +451,165 @@ if hlStatesFlag:
             print 'The hlb dictionary dict_dims is empty'
     else:
             print 'dict_all from hlb states is not available'
+            
+            
+#------------------------------------------------------------------------------
+
+''' Take each of the state labels as well as the whole task label if they exist and use them for classification.
+Cross-fold validation will be used for testing. Cross validation will be implemented through sklearn's cross validation module KFold
+http://scikit-learn.org/stable/modules/cross_validation.html.
+Currently doing offline classification'''            
+if classification:
+    
+    # Initialize structures (from previous runs)
+    folder_dims={}
+    dict_dims={}
+    dict_all={}    
+    
+    get_allTrial_Labels=0
+    
+    # lists
+    states=['mating']
+    levels=[ 'llbehavior']
+    axes=['My']
+    train_validate=['train','validate']
+    
+    # If you want to deserialize saved data
+    if get_allTrial_Labels:
+        data_folder_prefix = os.path.join(results_dir, success_strategy)
+        with open(data_folder_prefix+'/allTrials_hlbStates.pickle', 'rb') as handle:
+           unserialized_data = pickle.load(handle)    
+           
+    # Minhash Objects to estimate the jaccard distance for test and validation
+    tFx,tFy,tFz,tMx,tMy,tMz=MinHash(),MinHash(),MinHash(),MinHash(),MinHash(),MinHash() 
+    vFx,vFy,vFz,vMx,vMy,tMz=MinHash(),MinHash(),MinHash(),MinHash(),MinHash(),MinHash()      
+    
+    # Initialize k-fold data to a valid integer
+    kfold=10
+    
+    # Store current data folder names in a list so we can iterate it through it
+    folder_names_list=list(data_folder_names)
+       
+    # Structures 
+    # 1. crossfold dic:        contains labels for training under the state/level/traint_test/axis structure: 4xnumTrialsx3x6
+    # 2. jacard axis_list:   contains 1x6 final train union set and test set. It is a 1x6 set per state/level/axis/train_validate (2x4x3x6)
+    # 3. jacard_final array:   contains the final jaccard distances under state/level (4x3x1)
+    crossfold={}
+    jaccard_axis=[ [ [ [ [ [] for a in range(len(axes))]                          # innermost entry
+                                for l in range(len(levels))] 
+                                    for s in range(len(states))]
+                                        for t in range(len(train_validate))]
+                                            for k in range(kfold)]       
+    # Create jacard_final: compute the distance between train/validate sets across permutations of states:
+    # Within a given fold/level we want to compute the intersection of training with validation across states. 
+    # ... App_train \cap App_validate | App_train \cap Rot_validate ... | App_train \cap Mat_validate ... (4x(4x6)
+    # ... Rot_train \cap App_validate | Rot_train \cap Rot_validate ... | Rot_train \cap Mat_validate 
+    # ... 
+    # ... Mat_train \cap App_validate | Mat_train \cap Rot_validate ... | Mat_train \cap Mat_validate
+    jaccard_final       =np.zeros( ( kfold,len(levels),len(states),len(axes)) )
+    classification_matrix=np.zeros( ( kfold,len(levels),len(states),len( len(states)*len(axes) ),1) )
+    classification_vector=np.zeros( ( len(levels),len(states),len(states),1) )
+    
+    # Counters
+    k=0 # kfold
+    s=0 # state
+    l=0 # level
+    a=0 # axis
+    t=0 # training and validation
+    
+    # Create our crossfold dic and jacard axis dict
+    for state in states:   
+        crossfold[state]={}        
+        for level in levels:
+            crossfold[state][level]={}            
+            for t in train_validate:
+                crossfold[state][level][t]={}                
+                for axis in axes:
+                    crossfold[state][level][t][axis]={}
+                    
+    # Crossfold training and testing generator
+    kf=cross_validation.KFold(numTrials, n_iter=numTrials) # equivalent to leave one out
+    # Extract result onto a lists
+    kf_list=list(kf)
+    # Extract the indeces that belong to the training and validation lists    
+    train_idx,validate_idx=kf_list
+
+    # Populate the crossfold and run tests according to the number of crossfolds. 
+    # NEed to average at the end using the np.array mean method
+    # TODO: integrate enumerate to have both indeces and dictionary entries
+    for k in range(kfold):
+        for s,state in enumerate(states):
+            for l,level in enumerate(levels):
+                idx=0 # used to transition from training to testing
+                for t,tv in enumerate(train_validate):   
+                    r=len(kf_list[0][idx])                                  
+                    for trial in xrange(r): # len of train/test instances                           
+                        # Crossfold: copy all training items AND one test itme           
+                        crossfold[state][level][tv].update(allTrialLabels[state][kf_list[trial][idx]][level])
+                    idx=idx+1    
+                    
+                    # All trial/test entries for a given k-fold/state/level/axis will be ready. Get their union. only one entry left
+                    # This stucture will then need to be used to compute the jaccard distance (intersection/union) with the test set for all states/levels in a given fold.
+                    for a,axis in enumerate(axes):
+                        
+                        # Get labels 1st training set in a given axis
+                        jaccard_axis[k][t][s][l][a]=set(crossfold[state][level][tv][axis][0]) 
+                        
+                        # Loop from 2nd element to last and perform the union of the training set. 
+                        # We are doing leave-one-out cross validation, so we don't do this for the test set
+                        if len(r) > 1:
+                            for i in xrange(1,r):
+                                jaccard_axis[k][t][s][l][a].union(set(crossfold[state][level][tv][axis][i]))                    
+
+                    # Within a given fold/level we want to compute the intersection of all axes of training with validation across states. 
+                    # ... App_train \cap App_validate | App_train \cap Rot_validate ... | App_train \cap Mat_validate
+                    # ... Mat_train \cap App_validate | Mat_train \cap Rot_validate ... | Mat_train \cap Mat_validate
+                    # Iterate through 2D axis (6x6) one more time
+                    for i,j in itertools.product(range(len(axes)),range(len(axes))):
+                        jaccard_final[k][l][i][j]= ( float(  len(jaccard_axis[k][0][s][l][i].intersection(jaccard_axis[k][1][s][l][j]))) / 
+                                                     float(  len(jaccard_axis[k][0][s][l][i]).union      (jaccard_axis[k][1][s][l][j]))
+                                                    )
+
+            
+    # Last stage:
+    # A. Compute a single normalized probability for each test. 
+    # B. Compute the average value across folds.
+    #    i.  From the state permutations (4x4) we need to find the maximum in each row to find the best candidate. 
+    #    ii. Then, we need to know if the correct state was detected. To this end, we look at the diagonals.
+    for k in range(kfold):
+        for s in range(len(states)):
+            for l in range(len(levels)):
+                
+                # Sum the probabilities of all axes to get a final probability number and then normalize.
+                for i,a in itertools.product(range(len(states)),range(len(axes))):
+                    classification_matrix[k][l][s][i*a] += jaccard_final[k][l][s][a]
+                classification_matrix[k][l][s]/=len(axes)
+                
+    # Add across folds
+    for l in range(len(levels)):
+        for s in range(len(states)):
+            for k in range(kfold):                      
+                # Sum accross folds
+                classification_vector[l][s] +=classification_matrix[k][l][s]
+                
+            # Print info
+            print 'classification_vector row: ' + s + ' and values: ' + classification_vector[l][s]
+                                                          
+                    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
