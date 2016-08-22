@@ -5,7 +5,7 @@ from PIL import Image
 initFlag=0
 # Lists
 levels=['primitive', 'composite', 'llbehavior']
-axes  =['Mx', 'My', 'Mz', 'Fx', 'Fy', 'Fz']
+axes  =['Fx', 'Fy', 'Fz', 'Mx', 'My', 'Mz']
 
 def hex_to_rgb(RGBint):
     Blue =  RGBint & 255
@@ -148,4 +148,6 @@ def output_sample_all_trial(file, label, dict_cooked_allFiles,folder_names,numTr
             
         # Increment integer counter for level
         lev+=1
+        
+        file.close()
             

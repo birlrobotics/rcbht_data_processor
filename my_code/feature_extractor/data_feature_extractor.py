@@ -3,7 +3,7 @@ def extract_features(folder_dict,dimension_dict):
 	composite_dict = folder_dict['composite']
 	llbehavior_dict = folder_dict['llbehavior']
 
-	keys = ['Mx', 'My', 'Mz', 'Fx', 'Fy', 'Fz']
+	keys = ['Fx', 'Fy', 'Fz', 'Mx', 'My', 'Mz']
 
      # Use the maximum number of iterations that showed up for all axis (could also work with single axis)
 	for key in keys:
