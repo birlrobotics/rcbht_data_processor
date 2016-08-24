@@ -922,37 +922,31 @@ if lcss:
 #------------------------------------------------------------------------------
     # Compute LCSS for training samples for each fold/level/state/axis
     # Separate training samples from one test trial (across folds).
-    # Take this oportunity to encode rcbht labels into an a-z alphabet for simpler string comparison later on.                                                    
-    with open(os.path.joint(strat_dir,trial_lcss_mat_pickle),'wb') as handle:
-        lcss_trials_mat=pickle.load(handle)                            
-    #if not bool(lcss_trials_mat):
-    for k in range(kfold):
-        print 'fold: '+ str(k)
-        for l,level in enumerate(levels):
-            print level
-            for s,state in enumerate(states):
-                print state 
-                for a,axis in enumerate(axes):
-                    print axis
-                    start=time.clock()
-                    for i,j in itertools.product( range(train_len),range(train_len) ):   
-                        if j==0:                # on the first round of permutations only calculate the encoding once. after that, strSeq1 will be the same.
-                            # Perform similarity calculations across trials        #train index
-                            strSeq1 = allTrialLabels[state][ data_folder_names[ kf_list[k][0][i] ]][level][axis] 
-                            lbl.encodeRCBHTList(strSeq1,level)    
-
-                        if i!=j: # don't evaluate the same trial                                                                                                                                                                      
-                            strSeq2 = allTrialLabels[state][ data_folder_names[ kf_list[k][0][j] ]][level][axis]
-                            lbl.encodeRCBHTList(strSeq2,level)
-                                                        
-                            lcss_trials_mat[k][l][s][a][i][j]=lcs.LCS.longestCommonSubsequence(strSeq1,strSeq2) 
-                        if i==train_len-1 and j==train_len-1:
-                            end=time.clock()
-                            print 'Time to complete one round of lcs was: ' + str((end-start))
+    # Take this oportunity to encode rcbht labels into an a-z alphabet for simpler string comparison later on.     
+    if os.path.isfile(os.path.join(strat_dir,trial_lcss_mat_pickle)):                                               
+        with open(os.path.join(strat_dir,trial_lcss_mat_pickle),'wb') as handle:
+            lcss_trials_mat=pickle.load(handle)  
+                          
+    if not bool(lcss_trials_mat[0][0][0][0][0][0]):
+        for k in range(1): #kfold
+            for l,level in enumerate(levels):
+                for s,state in enumerate(states):
+                    for a,axis in enumerate(axes):
+                        for i,j in itertools.product( range(train_len),range(train_len) ):   
+                            if j==0:                # on the first round of permutations only calculate the encoding once. after that, strSeq1 will be the same.
+                                # Perform similarity calculations across trials        #train index
+                                strSeq1 = allTrialLabels[state][ data_folder_names[ kf_list[k][0][i] ]][level][axis] 
+                                lbl.encodeRCBHTList(strSeq1,level)    
     
-    # Very time consumeing structure to produce save it here. 
-    with open(os.path.joint(strat_dir,trial_lcss_mat_pickle),'wb') as handle:        
-        pickle.dump(lcss_trials_mat,handle,protocol=pickle.HIGHEST_PROTOCOL)
+                            if i!=j: # don't evaluate the same trial                                                                                                                                                                      
+                                strSeq2 = allTrialLabels[state][ data_folder_names[ kf_list[k][0][j] ]][level][axis]
+                                lbl.encodeRCBHTList(strSeq2,level)
+                                                            
+                                lcss_trials_mat[k][l][s][a][i][j]=lcs.LCS.longestCommonSubsequence(strSeq1,strSeq2)                             
+        
+        # Very time consumeing structure to produce save it here.     
+        with open(os.path.join(strat_dir,trial_lcss_mat_pickle),'wb') as handle:        
+            pickle.dump(lcss_trials_mat,handle,protocol=pickle.HIGHEST_PROTOCOL)
         
                                                 
     # Place the union of all training sets together in the first training of jaccard_axis_train                
