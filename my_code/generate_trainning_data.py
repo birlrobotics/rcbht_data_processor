@@ -1,5 +1,4 @@
 ''' 
-TODO: classify using 3 level labels together.
 TODO: online classification.
 
 Currently this program requires clean data set. Meaning: 3 folders only: Segments, 
@@ -7,7 +6,7 @@ Composites, and llBehaviors. Each folder must have only 6 files associated with 
 _Fy, _Fz, _Mx, _My, and _Mz. There should also be a State.dat file outside the three folders.
 If more data is encountered it will not be processed at this time.
 
-Structures:
+Jaccard Classification Structures:
 -------------------------------------------------------------------------------
 allTrialsLabels(dict):
 -------------------------------------------------------------------------------
@@ -88,7 +87,7 @@ primtiives:
 
 # system
 import os
-import shutil
+#import shutil
 
 # General
 from copy import deepcopy
@@ -96,6 +95,9 @@ import cPickle as pickle
 
 # matrix
 import numpy as np 
+
+# time
+import time
 
 # Iterations
 import itertools
@@ -108,6 +110,10 @@ import feature_extractor.data_feature_extractor as data_feature_extractor
 # classification
 from sklearn import cross_validation
 #from datasketch import MinHash
+
+# LCS
+import lcs.LCS
+import lcs.rcbht_lbl_conversion as lbl
 
 # debugging
 import ipdb, traceback,sys#,code
@@ -131,6 +137,9 @@ levels=['primitive', 'composite', 'llbehavior']
 axes=['Fx','Fy','Fz','Mx','My','Mz']
 train_validate=['train','validate']
 
+# Dictionaries
+allTrialLabels={}
+
 # lenghts
 s_len=len(states)
 l_len=len(levels)
@@ -143,14 +152,15 @@ initFlag=0
 
 successFlag=0
 failureFlag=0
-hlStatesFlag=1
-classification=1
-
+hlStatesFlag=0
 # For success/failure/hlStates there are 2 types of output: (i) the output per one trial, (ii) the output per all trais
 output_per_one_trial_flag=0 
-
-# For classification:
+#------------------------------------------------------------------------------
+# stream processing
+jaccard=0
 get_allTrial_Labels=0
+#------------------------------------------------------------------------------
+lcss=1
 #------------------------------------------------------------------------------
 
 # What kind of success_strategy will you analyze
@@ -161,9 +171,13 @@ strategy=success_strategy # default value. used in hblstates
 #------------------------------------------------------------------------------
 
 # Pickle folders
+
+# jaccard
 hlb_pickle                  ='allTrials_hlbStates.pickle'
 state_probabilities_pickle  ='state_prob_onelevel.pickle'
 results_pickle              ='results.pickle'
+#lcss
+trial_lcss_mat_pickle='trial_lcss_mat.pickle'
 #------------------------------------------------------------------------------
 # Folder names
 data_folder_names=[]        # Filtered to only take relevant folders
@@ -188,9 +202,9 @@ if not os.path.exists(train_data_dir):
     os.makedirs(train_data_dir)
     
 # If the directory already exists, recursively remove it.     
-else:
-    shutil.rmtree(train_data_dir)
-    os.makedirs(train_data_dir)
+#else:
+#    shutil.rmtree(train_data_dir)
+#    os.makedirs(train_data_dir)
 
 # img_directory for successful strategies
 directory='allTrials_success'
@@ -390,10 +404,7 @@ if failureFlag:
                 
             # Save allTrialLabels to File using pickle
             with open(data_folder_prefix+'/allTrials_failure.pickle', 'wb') as handle:
-                pickle.dump(allTrialLabels, handle, protocol=pickle.HIGHEST_PROTOCOL)            
-            # To load use:
-            #with open('filename.pickle', 'rb') as handle:
-            #   unserialized_data = pickle.load(handle)                    
+                pickle.dump(allTrialLabels, handle, protocol=pickle.HIGHEST_PROTOCOL)                               
                 
             if not os.path.exists(os.path.join(base_dir, '..', 'my_training_data', 'img_of_fail')):
                  os.makedirs(os.path.join(base_dir, '..', 'my_training_data', 'img_of_fail'))                 
@@ -532,10 +543,7 @@ if hlStatesFlag:
 
             # Save allTrialLabels to File using pickle
             with open(os.path.join(strat_dir,hlb_pickle), 'wb') as handle:
-                pickle.dump(allTrialLabels, handle, protocol=pickle.HIGHEST_PROTOCOL)            
-            # To load use:
-            #with open('filename.pickle', 'rb') as handle:
-            #   unserialized_data = pickle.load(handle)                            
+                pickle.dump(allTrialLabels, handle, protocol=pickle.HIGHEST_PROTOCOL)                               
                         
             ## Create directories to keep both labels and images in file
             for state in dict_cooked_from_folder:
@@ -563,11 +571,15 @@ if hlStatesFlag:
             
 #------------------------------------------------------------------------------
 
-''' Take each of the state labels as well as the whole task label if they exist and use them for classification.
-Cross-fold validation will be used for testing. Cross validation will be implemented through sklearn's cross validation module KFold
-http://scikit-learn.org/stable/modules/cross_validation.html.
-Currently doing offline classification'''            
-if classification:        
+''' Take each of the state labels as well as the whole task label if they exist 
+and use them for classification. Cross-fold validation will be used for testing. 
+Cross validation will be implemented through sklearn's cross validation module 
+KFold http://scikit-learn.org/stable/modules/cross_validation.html.
+Currently doing offline classification'''
+
+#--------------------------------------------------------------------------            
+if jaccard:        
+#--------------------------------------------------------------------------
 
     # Folders for storing results
     if strategy=='':                        # if this path does not exist
@@ -578,7 +590,7 @@ if classification:
         strat_dir = os.path.join(train_data_dir,strategy,)      
     
     # Create a classification folder and get the results folder
-    directory='classification'
+    directory='jaccard'
     classification_dir=os.path.join(strat_dir,directory)
     if not os.path.exists(classification_dir):
         os.makedirs(classification_dir) 
@@ -586,7 +598,7 @@ if classification:
     # If you want to deserialize saved data
     if get_allTrial_Labels:        
         with open(os.path.join(strat_dir,hlb_pickle), 'rb') as handle:
-           unserialized_data = pickle.load(handle)            
+           allTrialLabels = pickle.load(handle)            
 
     # Get Folder names
     data_folder_prefix = os.path.join(results_dir, strategy)    
@@ -595,11 +607,23 @@ if classification:
     folder_dims={}
     dict_dims={}
     dict_all={}      
-           
-    # Minhash Objects to estimate the jaccard distance for test and validation
-    #tFx,tFy,tFz,tMx,tMy,tMz=MinHash(),MinHash(),MinHash(),MinHash(),MinHash(),MinHash() 
-    #vFx,vFy,vFz,vMx,vMy,tMz=MinHash(),MinHash(),MinHash(),MinHash(),MinHash(),MinHash()      
     
+    # Store current data folder names in a list so we can iterate it through it
+    if not bool(data_folder_names):
+        # Get Folder names
+        #data_folder_prefix = os.path.join(base_dir, '..', 'my_data', success_strategy)
+        data_folder_prefix = os.path.join(results_dir, strategy)
+        orig_data_folder_names = os.listdir(data_folder_prefix)
+        
+        # Remove undesired folders
+        for data_folder_name in orig_data_folder_names:
+            if data_folder_name[:2] == '20':
+                data_folder_names.append(data_folder_name)
+                
+        numTrials=len(data_folder_names)  
+    #--------------------------------------------------------------------------         
+    # kFold Setup
+    #--------------------------------------------------------------------------
     # Initialize k-fold data to a valid integer
     kfold=numTrials
     
@@ -625,16 +649,17 @@ if classification:
     train_len=len(kf_list[0][0])
     validate_len=len(kf_list[0][1])
     tvlen=[];tvlen.append(train_len);tvlen.append(validate_len)
-    # Store current data folder names in a list so we can iterate it through it
-    folder_names_list=list(data_folder_names)
+    
+    #--------------------------------------------------------------------------
        
     # Structures 
-    # jacard axis t/v list:     contains 1x6 final train union set and test set. It is a 1x6 set per state/level/axis/train_validate (2x4x3x6)
-    # state_probability array:  contains the final state_probability under fold/level: state/state (4x4)
-    # permutation_matrix:       contains classification results permutations. level x states x (statesxaxes)    
-    # avg_prob_vector:          containes normalized probabilities. level x states x states
-    # classification_vector:    contains normalized correct classifications. level x states x states
-    # kfold_list:               contains indeces for train/validate trials for each fold: kfold x train|validate x elems
+    # kfold_list:               contains indeces for train/validate trials for each fold: kfold x train|validate x elems   
+    # jacard axis t/v list:     contains 1x6 final labels for train union set and test set. It is a 1x6 set per fold/train/state/level
+    # permutation_matrix:       contains results of int/union permutations. level x states x (statesxaxes)       
+    # state_probability array:  computes p(AB) like operations. squishes permutation. final state_probability under fold/level: state/state (4x4)    
+    # avg_prob_vector:          computes normalized probabilities over folds. level x states x states
+    # classification_vector:    computes percentage of correct classification for states. level x states x states
+    # res_vector:               for each level, keeps classification results of diag(classification_vector) in a row. 3x4 for levels x states    
     jaccard_axis_train=[ [ [ [ [ [] for a in range(len(axes))]                        
                                         for l in range(l_len)]                
                                             for s in range(s_len)]
@@ -659,7 +684,8 @@ if classification:
     avg_prob_vector      =np.zeros( ( l_len,s_len,s_len,1) )                     
     classification_vector=np.zeros( ( l_len,s_len,s_len,1) )                                  
                         
-    # Populate jaccard_axis according to training trials and one test trial across folds.    
+    # Populate jaccard_axis 
+    # Separate training samples from one test trial (across folds).
     for k in range(kfold):
         for s,state in enumerate(states):
             for l,level in enumerate(levels):
@@ -780,3 +806,247 @@ if classification:
         for data_slice in res:
             np.savetxt(outfile, data_slice, fmt='%0.3f')
             outfile.write('# New slice\n')
+            
+#------------------------------------------------------------------------------
+
+''' Take each of the state labels as well as the whole task label if they exist 
+and use them for classification. Cross-fold validation will be used for testing. 
+Cross validation will be implemented through sklearn's cross validation module 
+KFold http://scikit-learn.org/stable/modules/cross_validation.html.
+Currently doing offline classification'''
+
+#--------------------------------------------------------------------------            
+if lcss:        
+#--------------------------------------------------------------------------
+
+    # Folders for storing results
+    if strategy=='':                        # if this path does not exist
+        strategy=raw_input('Please enter a name for the strategy: \n')
+        get_allTrial_Labels=1
+
+    # Assign the current strategy directory    
+    strat_dir = os.path.join(train_data_dir,strategy)      
+    
+    # Create a classification folder and get the results folder
+    directory='lcss'
+    classification_dir=os.path.join(strat_dir,directory)
+    if not os.path.exists(classification_dir):
+        os.makedirs(classification_dir) 
+            
+    # If you want to deserialize saved data
+    if not bool(allTrialLabels): 
+        with open(os.path.join(strat_dir,hlb_pickle), 'rb') as handle:
+           allTrialLabels = pickle.load(handle)            
+
+    # Get Folder names in the results directory
+    data_folder_prefix = os.path.join(results_dir, strategy)  
+
+    # Store current data folder names in a list so we can iterate it through it
+    if not bool(data_folder_names):
+        # Get Folder names
+        #data_folder_prefix = os.path.join(base_dir, '..', 'my_data', success_strategy)
+        data_folder_prefix = os.path.join(results_dir, strategy)
+        orig_data_folder_names = os.listdir(data_folder_prefix)
+        
+        # Remove undesired folders
+        for data_folder_name in orig_data_folder_names:
+            if data_folder_name[:2] == '20':
+                data_folder_names.append(data_folder_name)
+                
+        numTrials=len(data_folder_names)          
+    #--------------------------------------------------------------------------         
+    # kFold Setup
+    #--------------------------------------------------------------------------
+    # Initialize k-fold data to a valid integer
+    kfold=numTrials
+    
+    # Crossfold training and testing generator
+    kf=cross_validation.LeaveOneOut(numTrials)
+                    
+    # Generate structure to hold train/validate indeces according to the number of folds
+    # Given that we are doing leave one out, we use numTrials as the number of folds   
+    kf_list=[ [] for k in range(numTrials)]; foo=[]; temp=[]
+    
+    # Extract the indeces that belong to the training and validation lists    
+    for t,v in kf:
+        temp.append(list(t)), temp.append(list(v))              
+    
+    # Extract result onto a list
+    for k in range(numTrials):
+        for t in range(2):            
+            for elems in range(len(temp[2*k+t])): # Need to extract the ints from the interior list
+                foo.append(temp[2*k+t][elems])             
+            kf_list[k].append(foo)
+            foo=[]    
+    
+    train_len=len(kf_list[0][0])
+    validate_len=len(kf_list[0][1])
+    tvlen=[];tvlen.append(train_len);tvlen.append(validate_len)
+    
+    # Initialize structures (from previous runs)
+    folder_dims={}
+    dict_dims={}
+    dict_all={}     
+    
+    #--------------------------------------------------------------------------
+    # Store current data folder names in a list so we can iterate it through it
+    folder_names_list=list(data_folder_names)
+       
+    # Structures 
+    # kfold_list:               contains indeces for train/validate trials for each fold: kfold x train|validate x elems   
+    # lcss_trials_mat:          for n trials a nxn matrix that will capture the lcss for a given fold/level/state/axis. Useful for offline data compilation.
+    # dictionary:               stores only the existing lcss outputs from the matrix to create an mx2 list. 
+    #                           the 2nd column will indicate the frequency with which ther term appeared, for fold/level/state/axis
+    # similarity:               takes similarity values for all axes for a given state/level/fold. 
+    # results:                  keep results for 3 levels and 4 states 3x4.
+    lcss_trials_mat=[ [ [ [ [ [ [] for t in range(train_len)]
+                                    for t in range(train_len)]
+                                        for a in range(a_len)]                        
+                                            for s in range(s_len)]
+                                                for l in range(l_len)]
+                                                    for k in range(kfold)]
+                                                
+    dictionary=[ [ [ [ [ [] for c in range(2)]                      # [lcss entry | frequency]
+                                for a in range(a_len)]                        
+                                    for s in range(s_len)]                
+                                        for l in range(l_len)]
+                                            for k in range(kfold)]      
+
+    similarity=[ [ [ [] for s in range(s_len)]                
+                          for l in range(l_len)]
+                              for k in range(kfold)]     
+#    similarity=[ [ [ [ [] for a in range(a_len)]                        
+#                                    for s in range(s_len)]                
+#                                        for l in range(l_len)]
+#                                            for k in range(kfold)]                                        
+#------------------------------------------------------------------------------
+    # Compute LCSS for training samples for each fold/level/state/axis
+    # Separate training samples from one test trial (across folds).
+    # Take this oportunity to encode rcbht labels into an a-z alphabet for simpler string comparison later on.                                                    
+    with open(os.path.joint(strat_dir,trial_lcss_mat_pickle),'wb') as handle:
+        lcss_trials_mat=pickle.load(handle)                            
+    #if not bool(lcss_trials_mat):
+    for k in range(kfold):
+        print 'fold: '+ str(k)
+        for l,level in enumerate(levels):
+            print level
+            for s,state in enumerate(states):
+                print state 
+                for a,axis in enumerate(axes):
+                    print axis
+                    start=time.clock()
+                    for i,j in itertools.product( range(train_len),range(train_len) ):   
+                        if j==0:                # on the first round of permutations only calculate the encoding once. after that, strSeq1 will be the same.
+                            # Perform similarity calculations across trials        #train index
+                            strSeq1 = allTrialLabels[state][ data_folder_names[ kf_list[k][0][i] ]][level][axis] 
+                            lbl.encodeRCBHTList(strSeq1,level)    
+
+                        if i!=j: # don't evaluate the same trial                                                                                                                                                                      
+                            strSeq2 = allTrialLabels[state][ data_folder_names[ kf_list[k][0][j] ]][level][axis]
+                            lbl.encodeRCBHTList(strSeq2,level)
+                                                        
+                            lcss_trials_mat[k][l][s][a][i][j]=lcs.LCS.longestCommonSubsequence(strSeq1,strSeq2) 
+                        if i==train_len-1 and j==train_len-1:
+                            end=time.clock()
+                            print 'Time to complete one round of lcs was: ' + str((end-start))
+    
+    # Very time consumeing structure to produce save it here. 
+    with open(os.path.joint(strat_dir,trial_lcss_mat_pickle),'wb') as handle:        
+        pickle.dump(lcss_trials_mat,handle,protocol=pickle.HIGHEST_PROTOCOL)
+        
+                                                
+    # Place the union of all training sets together in the first training of jaccard_axis_train                
+    for k in range(kfold):
+        for s in range(s_len):
+            for l in range(l_len): 
+                for idx in range(1,len(kf_list[k][0])): #for idx,trial in enumerate(kf_list[k][0],1): # train index starting at 1
+                    for a in range(len(axes)):
+                        jaccard_axis_train[k][0][s][l][a].union(jaccard_axis_train[k][idx][s][l][a]) 
+                        
+    # Perform the intersection of the training sets (we have taken their union) with the only validation set
+    # Within a given fold/state/level we want to compute the intersection of all axes of training with validation across states. 
+    # ... App_train \cap App_validate | App_train \cap Rot_validate ... | App_train \cap Mat_validate
+    # ... Mat_train \cap App_validate | Mat_train \cap Rot_validate ... | Mat_train \cap Mat_validate
+    # Iterate through 2D axis (6x6) one more time                        
+    for k in range(kfold):
+        for s in range(s_len):
+            for l in range(l_len): 
+                for p,a in itertools.product( range(s_len),range(a_len) ): # permutations of states with axes 4x6=24 label sets
+                    permutation_matrix[k][l][s][p*a_len+a] = ( 
+                                                                                                  #fixed trial index                                   state permutation 
+                                                                float(  len( jaccard_axis_train[k][0][s][l][a].intersection(jaccard_axis_validate[k][0][p][l][a]) )) / 
+                                                                float(  len( jaccard_axis_train[k][0][s][l][a].union       (jaccard_axis_validate[k][0][p][l][a]) )) 
+                                                            )
+
+            
+    # State Probabilities
+    # Compute product of probabilities for each fold/state/level (1x24)->(1x4)
+    # Then normalize the probability by dividing by the sum
+    for k in range(kfold):
+        for l in range(l_len):
+            for s in range(s_len): 
+                for p,a in itertools.product( range(s_len),range(a_len) ):
+                    state_probability[k][l][s][p] *= permutation_matrix[k][l][s][p*a_len+a]                   
+                denominator=np.sum(state_probability[k][l][s])
+                if denominator==0:
+                    denominator=1.0 # num=0,avoids a division by zero to produce a nan
+                for p in range(s_len):
+                    state_probability[k][l][s][p] /=denominator
+                    print state_probability[k][l][s][p]
+                    
+    # Save state probabilities
+    #pickle
+    with open(classification_dir+'/'+state_probabilities_pickle, 'wb') as handle:
+        pickle.dump(state_probability, handle, protocol=pickle.HIGHEST_PROTOCOL)            
+    # Save binary numpy to file (maybe more efficient than pickle and can be opened with np.loadtxt)
+    fd = open(os.path.join(classification_dir,state_probabilities_pickle[:-7]+'.txt'), "wb")
+    np.save(fd,state_probability)  
+    fd.close()
+    
+#    Testing a more friendly printout. need to fix formating.
+#    with file(os.path.join(classification_dir,state_probabilities_pickle[:-7]+'.txt'), 'w') as outfile:
+#     outfile.write('# Array shape: {0}\n'.format(state_probability.shape))
+#     for data_slice in state_probability:
+#        np.savetxt(outfile, data_slice, fmt='%.5f %.5f %.5f %.5f')
+#        outfile.write('# New slice\n')           
+                    
+    # Find average probabilities
+    for l in range(l_len):        
+        for s in range(s_len):               
+            for k in range(kfold): 
+                avg_prob_vector[l][s]+=state_probability[k][l][s] # which permutation was most likely for each state                
+            # Divide matrix by number of folds
+            avg_prob_vector[l]/=float(kfold)      
+     
+    # Find average correct classifications.          
+    #   Find max value across state and use that to generate a binary matrix. It represents which states correctly performed the right classification.
+    #   Sum accross folds, divide by the number of folds.
+    #   Each diagonal entry tells you the accuracy per state.
+    # The sum of the trace/4 tells you overall task accuracy
+    for l in range(l_len):
+        for k in range(kfold): 
+            for s in range(s_len):               
+                m=np.argmax(state_probability[k][l][s]) # which permutation was most likely for each state
+                classification_vector[l][s][m]+=1
+        # Once we have iterated by all the folds we can do an element-wise division by fold number        
+        classification_vector[l]/=float(kfold)
+            
+    # Results presentation (print,pickle,file)
+    res=np.zeros( (l_len,s_len) )
+    for l in range(l_len):
+        for ctr in range(s_len):
+            res[l]=classification_vector[l].diagonal()
+            print 'For level: [',l+1,'/',l_len,'] and State [',ctr+1,'/',s_len,'] accuracy is: ',res[l][ctr],'\n'
+        print 'Task accuracy for level: ',l+1, ' is: ',np.sum(res[l])/float(s_len),'\n'
+
+    # Save results
+    #pickle
+    with open(classification_dir+'/'+results_pickle, 'wb') as handle:
+        pickle.dump(res, handle, protocol=pickle.HIGHEST_PROTOCOL)            
+    # Save numpy to file
+    #np.savetxt( os.path.join(classification_dir,results_pickle[:-7]+'.txt'), res)  
+    with file(os.path.join(classification_dir,results_pickle[:-7]+'.txt'), 'w') as outfile:
+        outfile.write('# Array shape: {0}\n'.format(res.shape))
+        for data_slice in res:
+            np.savetxt(outfile, data_slice, fmt='%0.3f')
+            outfile.write('# New slice\n')            

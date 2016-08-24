@@ -1,0 +1,79 @@
+'''Encode string labels for the three layers of RCBHT with an alphabet long enough that it can encode with a single character. To this end we choose the a-z alphabet to encode 24 different labels accross the the 3 RCBHT levels.'''
+
+#-------------------------------------------------------------------------
+# gradLbl2gradInt
+# -Imp -Big -Med -Small Const Small Med Big Imp
+#   -4   -3   -2     -1   0       1   2   3   4
+#-------------------------------------------------------------------------
+def dLabel = gradInt2gradLbl(dLabel)
+
+    if dLabel== 'bpos':
+        dLabel = 'a'
+    elif dLabel== 'mpos':
+        dLabel = 'b'
+    elif dLabel== 'spos':
+        dLabel = 'c'
+    elif dLabel== 'bneg':
+        dLabel = 'd'
+    elif dLabel== 'mneg':
+        dLabel = 'e'
+    elif dLabel== 'sneg':
+        dLabel = 'f'
+    elif dLabel== 'cons':
+        dLabel = 'g'
+    elif dLabel== 'pimp':
+        dLabel = 'h'
+    elif dLabel== 'nimp':
+        dLabel = 'i'
+    elif dLabel== 'none':
+        dLabel = 'j'
+
+##-------------------------------------------------------------------------
+# actionInt2actionLbl
+# a i d k pc nc c u
+# 1 2 3 4 5  6  7 8
+##-------------------------------------------------------------------------
+def actionLbl = actionInt2actionLbl(actionLbl):
+
+    # Convert labels to ints
+    if actionLbl=='a':
+        actionLbl = 'k'    	# alignment
+    elif actionLbl== 'i':
+        actionLbl = 'l'    	# increase
+    elif actionLbl== 'd':
+        actionLbl = 'm'    	# decrease
+    elif actionLbl== 'k':
+        actionLbl = 'n'    	# constant
+    elif actionLbl== 'pc':
+        actionLbl = 'o'    	# positive contact
+    elif actionLbl== 'nc':
+        actionLbl = 'p'    	# negative contact
+    elif actionLbl== 'c':
+        actionLbl = 'q'   	# contact
+    elif actionLbl== 'u':
+        actionLbl = 'r'    	# unstable
+
+#-------------------------------------------------------------------------
+#   llbehLbl   = {'FX' 'CT' 'PS' 'PL' 'AL' 'SH' 'U' 'N');   
+#                {'fix' 'cont' 'push' 'pull' 'align' 'shift' 'unstable' 'noise');
+#   llbehLbl    = [ 1,   2,   3,   4,   5,   6,   7,  8];
+##-------------------------------------------------------------------------
+def llbLabel=llbInt2llbLbl(llbLabel):
+
+    # Convert labels to ints
+    if llbLabel == 'FX':
+        llbLabel = 's'    	# Fixed
+    elif llbLabel== 'CT':
+        llbLabel = 't'    	# contact
+    elif llbLabel== 'PS':
+        llbLabel = 'u'    	# push
+    elif llbLabel== 'PL':
+        llbLabel = 'v'    	# pull
+    elif llbLabel== 'AL':
+        llbLabel = 'w'    	# alignment
+    elif llbLabel== 'SH':
+        llbLabel = 'x'    	# shift
+    elif llbLabel== 'U':
+        llbLabel = 'y'; 	# unstable
+    elif(llbLabel== 'N':
+        llbLabel = 'z'    	# none
