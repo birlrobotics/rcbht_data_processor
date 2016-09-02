@@ -1,15 +1,22 @@
-def extract_features(folder_dict,dimension_dict):
-	primitive_dict = folder_dict['primitive']
-	composite_dict = folder_dict['composite']
-	llbehavior_dict = folder_dict['llbehavior']
+def extract_features(folder_dict,dimension_dict,sliceLabels):
+    primitive_dict = folder_dict['primitive']
+    composite_dict = folder_dict['composite']
+    llbehavior_dict = folder_dict['llbehavior']
 
-	keys = ['Fx', 'Fy', 'Fz', 'Mx', 'My', 'Mz']
-
-     # Use the maximum number of iterations that showed up for all axis (could also work with single axis)
-	for key in keys:
-		primitive_dict[key]  = slice_and_find_mode('primitive' , primitive_dict[key],  max(dimension_dict['primitive'].items(), key=lambda x: int(x[1]) )[1])
-		composite_dict[key]  = slice_and_find_mode('composite',  composite_dict[key],  max(dimension_dict['composite'].items(), key=lambda x: int(x[1]) )[1])
-		llbehavior_dict[key] = slice_and_find_mode('llbehavior', llbehavior_dict[key], max(dimension_dict['llbehavior'].items(),key=lambda x: int(x[1]) )[1])
+    keys = ['Fx', 'Fy', 'Fz', 'Mx', 'My', 'Mz']
+    
+    # Use the maximum number of iterations that showed up for all axis (could also work with single axis)
+    if sliceLabels:
+        for key in keys:
+            primitive_dict[key]  = slice_and_find_mode('primitive' , primitive_dict[key],  max(dimension_dict['primitive'].items(), key=lambda x: int(x[1]) )[1])
+            composite_dict[key]  = slice_and_find_mode('composite',  composite_dict[key],  max(dimension_dict['composite'].items(), key=lambda x: int(x[1]) )[1])
+            llbehavior_dict[key] = slice_and_find_mode('llbehavior', llbehavior_dict[key], max(dimension_dict['llbehavior'].items(),key=lambda x: int(x[1]) )[1])
+    else:
+        # Use the actual number of iterations that showed up for all axis (could also work with single axis)
+        for key in keys:
+             primitive_dict[key]  = slice_and_find_mode('primitive' , primitive_dict[key],  len(primitive_dict[key]) )
+             composite_dict[key]  = slice_and_find_mode('composite',  composite_dict[key],  len(composite_dict[key]) )
+             llbehavior_dict[key] = slice_and_find_mode('llbehavior', llbehavior_dict[key], len(llbehavior_dict[key]) )
 
 def iteration_mapper(x):
 	if 'Label' in x:

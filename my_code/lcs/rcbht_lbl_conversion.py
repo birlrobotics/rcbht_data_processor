@@ -86,6 +86,6 @@ def behLbl2abc(llbLabel,i):
     elif llbLabel[i]== 'SH':
         llbLabel[i] = 'x'    	# shift
     elif llbLabel[i]== 'U':
-        llbLabel[i] = 'y'; 	# unstable
+        llbLabel[i] = 'y';  	# unstable
     elif llbLabel[i]== 'N':
         llbLabel[i] = 'z'    	# none

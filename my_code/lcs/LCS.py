@@ -84,8 +84,8 @@ def longestCommonSubsequence(s1, s2):
      
      # Print out table (only useful for small tables - used for debugging)
      # Comment out when you are satisfied that the algorithm is working
-     printTable(costs, "costs.txt")
-     printTable(directions, "directions.txt")
+     #printTable(costs, "costs.txt")
+     #printTable(directions, "directions.txt")
 
      # find optimal alignment
      lcs=align(directions, s1, s2, maxRow, maxCol, "alignment.txt")

@@ -94,7 +94,7 @@ from copy import deepcopy
 import cPickle as pickle
 
 # math
-from math import log10
+from math import log10,pow
 import numpy as np 
 
 # time
@@ -124,7 +124,7 @@ ipdb.set_trace()
 
 # Globals
 global DB_PRINT
-DB_PRINT=1
+DB_PRINT=0
 
 #------------------------------------------------------------------------------
 
@@ -149,11 +149,13 @@ tv_len=len(train_validate)
 #------------------------------------------------------------------------------
 
 ## Flags
-initFlag=0
+initFlag=0              # Used for an initialization routine in creating jaccard axis
+sliceLabels=1           # Determines whether we slice labels so that they all axes have equal number of labels
+loadFromFileFlag=0      # Determines wehther we load saved structures to the program when they have been computed once.
 
 successFlag=0
 failureFlag=0
-hlStatesFlag=0
+hlStatesFlag=1
 # For success/failure/hlStates there are 2 types of output: (i) the output per one trial, (ii) the output per all trais
 output_per_one_trial_flag=0 
 #------------------------------------------------------------------------------
@@ -301,7 +303,7 @@ if successFlag:
             # For each trial, take the dictionary and reshape it (change number of iterations), output is the same NUMBER of labels for all axes.             
             try:
                 for data_folder_name in data_folder_names:        
-                    data_feature_extractor.extract_features(dict_all[data_folder_name],folder_dims)
+                    data_feature_extractor.extract_features(dict_all[data_folder_name],folder_dims,sliceLabels)
                     
                     # Create the allTrialsLables structure. It is organized by: state/trials/level/axis. Only contains labels.
                     allTrialLabels[data_folder_name]=deepcopy(dict_all[data_folder_name])  
@@ -323,7 +325,8 @@ if successFlag:
                 if output_per_one_trial_flag:
                     output_features.output_sample_one_trial(file_for_success_set, 's', dict_cooked_from_folder, os.path.join(base_dir, '..', 'my_training_data', 'img_of_success'))
                 else:
-                    output_features.output_sample_all_trial(file_for_success_set, 's', allTrialLabels,data_folder_names,numTrials,strat_dir)
+                    if sliceLabels: # TODO Currently only execute if we are slciing. Need to modify image. 
+                        output_features.output_sample_all_trial(file_for_success_set, 's', allTrialLabels,data_folder_names,numTrials,strat_dir)
             except:
                 type, value, tb = sys.exc_info()
                 traceback.print_exc()
@@ -401,7 +404,7 @@ if failureFlag:
             # Currently we take the max number of iterations in any given trial/level/axis.
             try:
                 for data_folder_name in failure_data_folder_names:        
-                    data_feature_extractor.extract_features(dict_all[data_folder_name],folder_dims)
+                    data_feature_extractor.extract_features(dict_all[data_folder_name],folder_dims,sliceLabels)
                     allTrialLabels[data_folder_name]=deepcopy(dict_all[data_folder_name]) 
             except:
                 type, value, tb = sys.exc_info()
@@ -421,7 +424,8 @@ if failureFlag:
                 if output_per_one_trial_flag:
                     output_features.output_sample_one_trial(file_for_fail_set, 'f', dict_cooked_from_folder, os.path.join(base_dir, '..', 'my_training_data', 'img_of_failure'))            
                 else:
-                    output_features.output_sample_all_trial(file_for_fail_set, 'f', allTrialLabels,failure_data_folder_names, numTrials,os.path.join(base_dir, '..', 'my_training_data',failure_strategy))
+                    if sliceLabels: # TODO Currently only execute if we are slciing. Need to modify image. 
+                        output_features.output_sample_all_trial(file_for_fail_set, 'f', allTrialLabels,failure_data_folder_names, numTrials,os.path.join(base_dir, '..', 'my_training_data',failure_strategy))
             except:
                 type, value, tb = sys.exc_info()
                 traceback.print_exc()
@@ -461,7 +465,7 @@ if hlStatesFlag:
     
     # Open files for each of the states we will analyze
     for state in states:
-        files_for_states[state] = open(os.path.join(base_dir,'..', 'my_training_data', "training_set_for_"+state), 'w')    
+        files_for_states[state] = open(os.path.join(strat_dir, "training_set_for_"+state), 'w')    
 
     data_folder_prefix = os.path.join(results_dir, success_strategy)
     orig_data_folder_names = os.listdir(data_folder_prefix)
@@ -532,7 +536,7 @@ if hlStatesFlag:
                 for data_folder_name in data_folder_names:
                     for state in dict_cooked_from_folder:                
 #                       data_feature_extractor.extract_features(dict_cooked_from_folder[state],folder_dims[state])
-                        data_feature_extractor.extract_features(dict_all[data_folder_name][state],folder_dims[state])                                                                                          
+                        data_feature_extractor.extract_features(dict_all[data_folder_name][state],folder_dims[state],sliceLabels)                                                                                          
                                     
             except:
                 print 'error found in '+ state
@@ -563,7 +567,8 @@ if hlStatesFlag:
                     if output_per_one_trial_flag:
                         output_features.output_sample_one_trial(files_for_states[state], str(states.index(state)), dict_cooked_from_folder[state], os.path.join(strat_dir, hlb_dir))
                     else:
-                        output_features.output_sample_all_trial(files_for_states[state], str(states.index(state)), allTrialLabels[state],data_folder_names,numTrials,os.path.join(strat_dir,hlb_dir))
+                        if sliceLabels: # TODO Currently only execute if we are slciing. Need to modify image. 
+                            output_features.output_sample_all_trial(files_for_states[state], str(states.index(state)), allTrialLabels[state],data_folder_names,numTrials,os.path.join(strat_dir,hlb_dir))
             
                 except:
                     type, value, tb = sys.exc_info()
@@ -864,7 +869,8 @@ if lcss:
     # kFold Setup
     #--------------------------------------------------------------------------
     # Initialize k-fold data to a valid integer
-    kfold=numTrials
+    #kfold=numTrials
+    kfold=3
     
     # Crossfold training and testing generator
     kf=cross_validation.LeaveOneOut(numTrials)
@@ -924,72 +930,78 @@ if lcss:
 #------------------------------------------------------------------------------
     # Compute LCSS for training samples for each fold/level/state/axis
     # Separate training samples from one test trial (across folds).
+    # Compare the first appropriate training element, with the rest. Keep the longest lcss.
     # Take this oportunity to encode rcbht labels into an a-z alphabet for simpler string comparison later on.     
-    if os.path.isfile(os.path.join(strat_dir,trial_lcss_mat_pickle)):                                               
-        with open(os.path.join(strat_dir,trial_lcss_mat_pickle),'rb') as handle:
-            lcss_trials_mat=pickle.load(handle)  
-    if 0==1:
-        a=0
-    else:                                  
-        if not bool(lcss_trials_mat[0][0][0][0][0][0]):
-            for k in range(kfold):
-                for l,level in enumerate(levels):
-                    for s,state in enumerate(states):
-                        for a,axis in enumerate(axes):
-                            for i,j in itertools.product( range(train_len),range(train_len) ):   
-                                if j==0:                # on the first round of permutations only calculate the encoding once. after that, strSeq1 will be the same.
-                                    # Perform similarity calculations across trials                #train index
-                                    strSeq1 = allTrialLabels[state][ data_folder_names[ kf_list[k][0][i] ]][level][axis] 
-                                    lbl.encodeRCBHTList(strSeq1,level)    
-        
-                                if i!=j: # don't evaluate the diagonal (same trial)
-                                    strSeq2 = allTrialLabels[state][ data_folder_names[ kf_list[k][0][j] ]][level][axis]
-                                    lbl.encodeRCBHTList(strSeq2,level)
-                                                                          
-                                    temp=lcs.LCS.longestCommonSubsequence(strSeq1,strSeq2)  
+    if loadFromFileFlag:
+        if os.path.isfile(os.path.join(strat_dir,trial_lcss_mat_pickle)):                                               
+            with open(os.path.join(strat_dir,trial_lcss_mat_pickle),'rb') as handle:
+                lcss_trials_mat=pickle.load(handle)  
+    # IF there is no data (not loaded from file) then create lcss_trials_mat                             
+    if not bool(lcss_trials_mat[0][0][0][0][0][0]):
+        for k in range(kfold):
+            for l,level in enumerate(levels):
+                for s,state in enumerate(states):
+                    for a,axis in enumerate(axes):
+                        for i,j in itertools.product( range(train_len),range(train_len) ):   
+                            if j==0:                # on the first round of permutations only calculate the encoding once. after that, strSeq1 will be the same.
+                                # Perform similarity calculations across trials                #train index
+                                strSeq1 = allTrialLabels[state][ data_folder_names[ kf_list[k][0][i] ]][level][axis] 
+                                lbl.encodeRCBHTList(strSeq1,level)    
     
-                                    # ONLY record an lcss if its longer than existing instances in current or previous trials                                
-                                    # For the first trial run:
-                                    if i==0:
-                                        # 2. Find the max value. If already exists, increase counter.
-                                        currMax=max(lcss_trials_mat[k][l][s][a][i][0] or ['e'],key=len)
-                                        if currMax=='e': # if list is empty assign directly
+                            if i!=j: # don't evaluate the diagonal (same trial)
+                                strSeq2 = allTrialLabels[state][ data_folder_names[ kf_list[k][0][j] ]][level][axis]
+                                lbl.encodeRCBHTList(strSeq2,level)
+                                try:                                      
+                                    temp=lcs.LCS.longestCommonSubsequence(strSeq1,strSeq2)  # may sometimes have no overlap ""
+                                except:
+                                    print 'error found in lcss computation'
+                                    type, value, tb = sys.exc_info()
+                                    traceback.print_exc()
+                                    ipdb.post_mortem(tb)  
+                                # ONLY record an lcss if its longer than existing instances in current or previous trials                                
+                                # For the first trial run:
+                                if i==0:
+                                    # 2. Find the max value. If already exists, increase counter.
+                                    #currMax=max(lcss_trials_mat[k][l][s][a][i][0] or ['e'],key=len)
+                                    currMax=len(lcss_trials_mat[k][l][s][a][i][0])
+                                    if currMax==0: #'e': # if list is empty assign directly
+                                        lcss_trials_mat[k][l][s][a][i][0]=deepcopy(temp)
+                                        if lcss_trials_mat[k][l][s][a][i][1]==[]:
+                                            lcss_trials_mat[k][l][s][a][i][1]=1 # count the number of times this value appears
+                                        else:
+                                            lcss_trials_mat[k][l][s][a][i][1]+=1 # count the number of times this value appears
+
+                                    else:                                                                                                            
+                                        if len(temp) > currMax:
+                                            # 2. Find the max value. If already exists, increase counter.
                                             lcss_trials_mat[k][l][s][a][i][0]=deepcopy(temp)
                                             if lcss_trials_mat[k][l][s][a][i][1]==[]:
                                                 lcss_trials_mat[k][l][s][a][i][1]=1 # count the number of times this value appears
                                             else:
-                                                lcss_trials_mat[k][l][s][a][i][1]+=1 # count the number of times this value appears
-    
-                                        else:                                                                                                            
-                                            if len(temp) > currMax:
-                                                # 2. Find the max value. If already exists, increase counter.
+                                                lcss_trials_mat[k][l][s][a][i][1]+=1
+                                
+                                # For all other trial runs (we will look for the same value in prior trial runs)
+                                else:            
+                                    # 1. Has it happened before, if no include it and increase its counter. If no, skip
+                                    for repeat in range(i):
+                                        if temp==lcss_trials_mat[k][l][s][a][repeat][0]:
+                                            lcss_trials_mat[k][l][s][a][repeat][1]+=1
+                                        else:
+                                            currMax=max(lcss_trials_mat[k][l][s][a][i][0] or ['e'],key=len) #currMax=len(lcss_trials_mat[k][l][s][a][i][0])
+                                            
+                                            if currMax==0:#'e': 
                                                 lcss_trials_mat[k][l][s][a][i][0]=deepcopy(temp)
-                                                if lcss_trials_mat[k][l][s][a][i][1]==[]:
-                                                    lcss_trials_mat[k][l][s][a][i][1]=1 # count the number of times this value appears
-                                                else:
+                                                lcss_trials_mat[k][l][s][a][i][1]=1 
+                                                
+                                            else:                                                                                                            
+                                                if len(temp) > currMax:
+                                                    lcss_trials_mat[k][l][s][a][i][0]=deepcopy(temp)                                                
                                                     lcss_trials_mat[k][l][s][a][i][1]+=1
-                                    
-                                    # For all other trial runs (we will look for the same value in prior trial runs)
-                                    else:            
-                                        # 1. Has it happened before, if no include it and increase its counter. If no, skip
-                                        for repeat in range(i):
-                                            if temp==lcss_trials_mat[k][l][s][a][repeat][0]:
-                                                lcss_trials_mat[k][l][s][a][repeat][1]+=1
-                                            else:
-                                                currMax=max(lcss_trials_mat[k][l][s][a][i][0] or ['e'],key=len)
-                                                if currMax=='e': 
-                                                    lcss_trials_mat[k][l][s][a][i][0]=deepcopy(temp)
-                                                    lcss_trials_mat[k][l][s][a][i][1]=1 
-                                                    
-                                                else:                                                                                                            
-                                                    if len(temp) > currMax:
-                                                        lcss_trials_mat[k][l][s][a][i][0]=deepcopy(temp)                                                
-                                                        lcss_trials_mat[k][l][s][a][i][1]+=1
-            
         
-            # Very time consuming structure to produce. Save it here.     
-            with open(os.path.join(strat_dir,trial_lcss_mat_pickle),'wb') as handle:        
-                pickle.dump(lcss_trials_mat,handle,protocol=pickle.HIGHEST_PROTOCOL)
+    
+        # Very time consuming structure to produce. Save it here.     
+        with open(os.path.join(strat_dir,trial_lcss_mat_pickle),'wb') as handle:        
+            pickle.dump(lcss_trials_mat,handle,protocol=pickle.HIGHEST_PROTOCOL)
         
     # Dictionary     
     # Go through the structure once again. This time we will squash repeated lcss across the different trial combinations and end up
@@ -1016,12 +1028,15 @@ if lcss:
                         tempIdx=[]
                         i+=1
                         
-                    # One more round to catch a few empty lists
-                    tempLen=len(lcss_trials_mat[k][l][s][a])
-                    for mm in range(len(lcss_trials_mat[k][l][s][a])):
-                        if lcss_trials_mat[k][l][s][a][mm][0]==[]:
+                    # One more round to catch a few empty lists left by mistake
+                    mm=0
+                    tempLen=len(lcss_trials_mat[k][l][s][a])                    
+                    while mm < tempLen:                   
+                        if lcss_trials_mat[k][l][s][a][mm][0]==[]: # Do not increment counter if we delete an entry, since list shrinks
                             del lcss_trials_mat[k][l][s][a][mm]
-                    
+                            tempLen=len(lcss_trials_mat[k][l][s][a])
+                        else:
+                            mm+=1                                                     
                     
     #--------------------------------------------------------------------------                
     # Similarity Permutation Matrix.
@@ -1062,11 +1077,13 @@ if lcss:
                             # Add metric for all axes, it gives a full states determination
                             if dist!=0:
                                 permutation_matrix[k][l][s][p*a_len+a] += log10(strSeq2_freq) + log10(dist)
+                                #permutation_matrix[k][l][s][p*a_len+a] += 1.0/log10(strSeq2_freq) + pow(dist,2) # TODO Need to add condition for zero difsion
+                                #permutation_matrix[k][l][s][p*a_len+a] += 1.0/strSeq2_freq + pow(dist,2)
                     permutation_matrix[k][l][s][p*a_len+a] *= scalar
      
                    
     # Similarity State Metric
-    # Compute sum of probabilities across axes for each fold/state/level (1x24)->(1x4)
+    # Compute sum of similarities across axes for each fold/state/level (1x24)->(1x4)
     for k in range(kfold):
         for l in range(l_len):
             for s in range(s_len): 
