@@ -4,90 +4,14 @@ TODO: online classification.
 Currently this program requires clean data set. Meaning: 3 folders only: Segments, 
 Composites, and llBehaviors. Each folder must have only 6 files associated with _Fx, 
 _Fy, _Fz, _Mx, _My, and _Mz. There should also be a State.dat file outside the three folders.
-If more data is encountered it will not be processed at this time.
-
-Jaccard Classification Structures:
--------------------------------------------------------------------------------
-allTrialsLabels(dict):
--------------------------------------------------------------------------------
-    states(4)
-        trials(n)
-            level(3)
-                axis(6)
-                    inside contains a series of labels..
--------------------------------------------------------------------------------
-
-Classification
--------------------------------------------------------------------------------
--------------------------------------------------------------------------------
-jaccard_final(numpy array):
--------------------------------------------------------------------------------
-    kfolds x 
-        3 levels x 
-            4 states by 6 axis
-array([[[[ 0.,  0.,  0.,  0.,  0.,  0.],
-         [ 0.,  0.,  0.,  0.,  0.,  0.],
-         [ 0.,  0.,  0.,  0.,  0.,  0.],
-         [ 0.,  0.,  0.,  0.,  0.,  0.]],
-
-        [[ 0.,  0.,  0.,  0.,  0.,  0.],
-         [ 0.,  0.,  0.,  0.,  0.,  0.],
-         [ 0.,  0.,  0.,  0.,  0.,  0.],
-         [ 0.,  0.,  0.,  0.,  0.,  0.]],
-
-        [[ 0.,  0.,  0.,  0.,  0.,  0.],
-         [ 0.,  0.,  0.,  0.,  0.,  0.],
-         [ 0.,  0.,  0.,  0.,  0.,  0.],
-         [ 0.,  0.,  0.,  0.,  0.,  0.]]],...)
--------------------------------------------------------------------------------
-permutation_matrix(numpy array):
--------------------------------------------------------------------------------
-    kfolds x 
-        3 levels x 
-            4 states x 
-                4 states by 6 axis (classfication permutations)
-        -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        It represents a way to represent the permutations (columns) of classification for each existing state (rows)
-        # ... App_train \cap App_validate | App_train \cap Rot_validate ... | App_train \cap Mat_validate ... (4x(4x6)
-        # ... Rot_train \cap App_validate | Rot_train \cap Rot_validate ... | Rot_train \cap Mat_validate 
-        # ... 
-        # ... Mat_train \cap App_validate | Mat_train \cap Rot_validate ... | Mat_train \cap Mat_validate
-        -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-primitives:
-   APP  [[ 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. ],
-   ROT   [ 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. ],
-   INS   [ 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. ],
-   AMT   [ 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. ]],
-composites:
-        [[ 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. ],
-         [ 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. ],
-  ...    [ 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. ],
-         [ 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. ]],
-behaviors:         
-        [[ 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. ],
-         [ 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. ],
-  ...    [ 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. ],
-         [ 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. ]],
-
--------------------------------------------------------------------------------
-classification_vector(numpy array):
--------------------------------------------------------------------------------
-        3 levels x 
-            4 states x 
-                4 states 
-        # This six probability values corresponding to each axis above are summed to have one probability per permutation.
-        # This structure is summed for each level over all folds to compute an average. 
-primtiives:                
-  APP     [[ 0.,  0.,  0.,  0.]
-  ROT      [ 0.,  0.,  0.,  0.]
-  INS      [ 0.,  0.,  0.,  0.]
-  MAT      [ 0.,  0.,  0.,  0.]] ... 
--------------------------------------------------------------------------------    
-'''
+If more data is encountered it will not be processed at this time.'''
 
 # system
 import os
 #import shutil
+
+# performance
+import Cython
 
 # General
 from copy import deepcopy
@@ -109,7 +33,7 @@ import data_parser.data_folder_parser           as data_folder_parser
 import feature_extractor.data_feature_extractor as data_feature_extractor
 
 # classification
-from sklearn import cross_validation
+from sklearn import cross_validation,svm
 #from datasketch import MinHash
 
 # LCS
@@ -124,7 +48,7 @@ ipdb.set_trace()
 
 # Globals
 global DB_PRINT
-DB_PRINT=0
+DB_PRINT=1
 
 #------------------------------------------------------------------------------
 
@@ -149,13 +73,13 @@ tv_len=len(train_validate)
 #------------------------------------------------------------------------------
 
 ## Flags
-initFlag=0              # Used for an initialization routine in creating jaccard axis
-sliceLabels=1           # Determines whether we slice labels so that they all axes have equal number of labels
-loadFromFileFlag=0      # Determines wehther we load saved structures to the program when they have been computed once.
+initFlag        =0              # Used for an initialization routine in creating jaccard axis
+sliceLabels     =1           # Determines whether we slice labels so that they all axes have equal number of labels
+loadFromFileFlag=1      # Determines wehther we load saved structures to the program when they have been computed once.
 
-successFlag=0
-failureFlag=0
-hlStatesFlag=1
+successFlag     =0           # Find labels for entire task
+failureFlag     =0
+hlStatesFlag=0          # Separate labels by state
 # For success/failure/hlStates there are 2 types of output: (i) the output per one trial, (ii) the output per all trais
 output_per_one_trial_flag=0 
 #------------------------------------------------------------------------------
@@ -167,7 +91,7 @@ lcss=1
 #------------------------------------------------------------------------------
 
 # What kind of success_strategy will you analyze
-success_strategy='SIM_HIRO_ONE_SA_SUCCESS'
+success_strategy='REAL_HIRO_ONE_SA_SUCCESS'
 failure_strategy="SIM_HIRO_ONE_SA_ERROR_CHARAC_Prob"
 strategy=success_strategy # default value. used in hblstates
 
@@ -586,7 +510,87 @@ if hlStatesFlag:
 and use them for classification. Cross-fold validation will be used for testing. 
 Cross validation will be implemented through sklearn's cross validation module 
 KFold http://scikit-learn.org/stable/modules/cross_validation.html.
-Currently doing offline classification'''
+Currently doing offline classification
+
+Jaccard Classification Structures:
+-------------------------------------------------------------------------------
+allTrialsLabels(dict):
+-------------------------------------------------------------------------------
+    states(4)
+        trials(n)
+            level(3)
+                axis(6)
+                    inside contains a series of labels..
+-------------------------------------------------------------------------------
+
+Classification
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+jaccard_final(numpy array):
+-------------------------------------------------------------------------------
+    kfolds x 
+        3 levels x 
+            4 states by 6 axis
+array([[[[ 0.,  0.,  0.,  0.,  0.,  0.],
+         [ 0.,  0.,  0.,  0.,  0.,  0.],
+         [ 0.,  0.,  0.,  0.,  0.,  0.],
+         [ 0.,  0.,  0.,  0.,  0.,  0.]],
+
+        [[ 0.,  0.,  0.,  0.,  0.,  0.],
+         [ 0.,  0.,  0.,  0.,  0.,  0.],
+         [ 0.,  0.,  0.,  0.,  0.,  0.],
+         [ 0.,  0.,  0.,  0.,  0.,  0.]],
+
+        [[ 0.,  0.,  0.,  0.,  0.,  0.],
+         [ 0.,  0.,  0.,  0.,  0.,  0.],
+         [ 0.,  0.,  0.,  0.,  0.,  0.],
+         [ 0.,  0.,  0.,  0.,  0.,  0.]]],...)
+-------------------------------------------------------------------------------
+permutation_matrix(numpy array):
+-------------------------------------------------------------------------------
+    kfolds x 
+        3 levels x 
+            4 states x 
+                4 states by 6 axis (classfication permutations)
+        -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        It represents a way to represent the permutations (columns) of classification for each existing state (rows)
+        # ... App_train \cap App_validate | App_train \cap Rot_validate ... | App_train \cap Mat_validate ... (4x(4x6)
+        # ... Rot_train \cap App_validate | Rot_train \cap Rot_validate ... | Rot_train \cap Mat_validate 
+        # ... 
+        # ... Mat_train \cap App_validate | Mat_train \cap Rot_validate ... | Mat_train \cap Mat_validate
+        -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+primitives:
+   APP  [[ 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. ],
+   ROT   [ 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. ],
+   INS   [ 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. ],
+   AMT   [ 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. ]],
+composites:
+        [[ 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. ],
+         [ 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. ],
+  ...    [ 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. ],
+         [ 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. ]],
+behaviors:         
+        [[ 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. ],
+         [ 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. ],
+  ...    [ 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. ],
+         [ 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. | 0.,  0.,  0.,  0.,  0.,  0. ]],
+
+-------------------------------------------------------------------------------
+classification_vector(numpy array):
+-------------------------------------------------------------------------------
+        3 levels x 
+            4 states x 
+                4 states 
+        # This six probability values corresponding to each axis above are summed to have one probability per permutation.
+        # This structure is summed for each level over all folds to compute an average. 
+primtiives:                
+  APP     [[ 0.,  0.,  0.,  0.]
+  ROT      [ 0.,  0.,  0.,  0.]
+  INS      [ 0.,  0.,  0.,  0.]
+  MAT      [ 0.,  0.,  0.,  0.]] ... 
+-------------------------------------------------------------------------------    
+'''
+
 
 #--------------------------------------------------------------------------            
 if jaccard:        
@@ -607,7 +611,7 @@ if jaccard:
         os.makedirs(classification_dir) 
             
     # If you want to deserialize saved data
-    if get_allTrial_Labels:        
+    if loadFromFileFlag:        
         with open(os.path.join(strat_dir,hlb_pickle), 'rb') as handle:
            allTrialLabels = pickle.load(handle)            
 
@@ -846,8 +850,9 @@ if lcss:
             
     # If you want to deserialize saved data
     if not bool(allTrialLabels): 
-        with open(os.path.join(strat_dir,hlb_pickle), 'rb') as handle:
-           allTrialLabels = pickle.load(handle)            
+        if loadFromFileFlag:
+            with open(os.path.join(strat_dir,hlb_pickle), 'rb') as handle:
+               allTrialLabels = pickle.load(handle)            
 
     # Get Folder names in the results directory
     data_folder_prefix = os.path.join(results_dir, strategy)  
@@ -870,7 +875,7 @@ if lcss:
     #--------------------------------------------------------------------------
     # Initialize k-fold data to a valid integer
     #kfold=numTrials
-    kfold=3
+    kfold=1
     
     # Crossfold training and testing generator
     kf=cross_validation.LeaveOneOut(numTrials)
@@ -928,10 +933,10 @@ if lcss:
     classification_vector=np.zeros( ( l_len, s_len, s_len,1) )  
     avg_prob_vector      =np.zeros( ( l_len, s_len, s_len,1) )                                        
 #------------------------------------------------------------------------------
-    # Compute LCSS for training samples for each fold/level/state/axis
-    # Separate training samples from one test trial (across folds).
-    # Compare the first appropriate training element, with the rest. Keep the longest lcss.
-    # Take this oportunity to encode rcbht labels into an a-z alphabet for simpler string comparison later on.     
+# Compute LCSS for training samples for each fold/level/state/axis
+# Separate training samples from one test trial (across folds).
+# Compare the first appropriate training element, with the rest. Keep the longest lcss.
+# Take this oportunity to encode rcbht labels into an a-z alphabet for simpler string comparison later on.     
     if loadFromFileFlag:
         if os.path.isfile(os.path.join(strat_dir,trial_lcss_mat_pickle)):                                               
             with open(os.path.join(strat_dir,trial_lcss_mat_pickle),'rb') as handle:
@@ -951,8 +956,9 @@ if lcss:
                             if i!=j: # don't evaluate the diagonal (same trial)
                                 strSeq2 = allTrialLabels[state][ data_folder_names[ kf_list[k][0][j] ]][level][axis]
                                 lbl.encodeRCBHTList(strSeq2,level)
-                                try:                                      
-                                    temp=lcs.LCS.longestCommonSubsequence(strSeq1,strSeq2)  # may sometimes have no overlap ""
+                                try:               
+                                    print 'fold: ' + str(k) + ' level: ' + str(l) + ' state: ' + str(s) + ' axes: ' + str(a) + ' index i: ' + str(i) + ' index j: ' + str(j)
+                                        temp=lcs.LCS.longestCommonSubsequence(strSeq1,strSeq2)  # may sometimes have no overlap ""
                                 except:
                                     print 'error found in lcss computation'
                                     type, value, tb = sys.exc_info()
@@ -1147,3 +1153,7 @@ if lcss:
         for data_slice in res:
             np.savetxt(outfile, data_slice, fmt='%0.3f')
             outfile.write('# New slice\n')            
+            
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# SVM Classification

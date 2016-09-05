@@ -5,7 +5,7 @@ def parse_file(file):
      # Now strip each individual "iteration" block from file
 	iteration_count = 1
 	for iteration_text in iteration_texts:
-		iteration_text = iteration_text.strip()
+		iteration_text = iteration_text.strip() # 
 		if iteration_text == '':
 			continue
 		dict_cooked_from_iteration = mapper_text_to_dict(iteration_text)

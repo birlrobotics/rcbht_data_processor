@@ -33,16 +33,19 @@ def parse_folder(folder_path, split_by_states = False):
 	for level in ['primitive', 'composite', 'llbehavior']:
 		dict_cooked_from_folder[level] = {}
 		for file_name in os.listdir(dict_for_folder_path[level]):
-      
-                # Extract Fx,Fy,...,Mz. TODO: Separate right from left
-			axis = file_name.split('_')[1][:2]
-			file_path = os.path.join(dict_for_folder_path[level], file_name)
-			file = open(file_path, 'r') # open the corresponding data file
-			d = data_file_parser.parse_file(file) # create list of dic with entries for each bloc of data
-			if d == None:
-				return None
-			dict_cooked_from_folder[level][axis] = d
-			file.close()   
+              
+              # Extract Fx,Fy,...,Mz. TODO: Separate right from left
+                 axis = file_name.split('_')[1][:2]
+                 file_path = os.path.join(dict_for_folder_path[level], file_name)
+              
+                 # Only read files that end in .dat and ignore all others
+                 if file_path[-3:] == 'dat' or file_path[-3:] == 'txt':
+                     file = open(file_path, 'r') # open the corresponding data file
+                     d = data_file_parser.parse_file(file) # create list of dic with entries for each bloc of data
+                     if d == None:
+                         return None
+                     dict_cooked_from_folder[level][axis] = d
+                     file.close()   
    
         # Check whether or not you want to split data by state Approach/Rot/Ins/Mating
 	if not split_by_states:
