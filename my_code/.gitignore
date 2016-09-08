@@ -1,2 +1,4 @@
 .pyc
 *.*~
+*/my_training_data
+!/my_training_data
