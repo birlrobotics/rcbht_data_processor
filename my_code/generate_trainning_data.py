@@ -987,7 +987,7 @@ if lcss:
                                         lcss_trials_mat[k][l][s][a][0][1]=1 # count the number of times this value appears
                                     else:
                                         lcss_trials_mat[k][l][s][a][0][1]+=1 # count the number of times this value appears
-                                    currMax=len(lcss_trials_mat[k][l][s][a][0][0])
+                                    currMax=len(temp)
                                 else:                                                                                                            
                                     if len(temp) > currMax:
                                         # 2. Find the max value. If already exists, increase counter.
@@ -996,7 +996,7 @@ if lcss:
                                             lcss_trials_mat[k][l][s][a][0][1]=1 # count the number of times this value appears
                                         else:
                                             lcss_trials_mat[k][l][s][a][0][1]+=1  
-                                        currMax=len(lcss_trials_mat[k][l][s][a][0][0])
+                                        currMax=len(temp)
         
     
         # Very time consuming structure to produce. Save it here.     
