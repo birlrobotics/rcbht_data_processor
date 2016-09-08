@@ -40,48 +40,26 @@ kelly_colors_hex = [
 
 kelly_colors_hex = map(hex_to_rgb, kelly_colors_hex)
 
-img_name_count = 0
 
 # Prints one image for each iterataion containing data for FxyzMxyz (if we do this) we require that FxyzMxyz are all of the same length
 # Same length data is produced in data_feature_extractor.p::slice_and_find_mode
-def output_sample_one_trial(file, label, dict_cooked_from_folder,img_folder):
-    global img_name_count
-    output_pixels = []
-    output_width = None
+def output_sample_one_trial(file, label, dict_all):
+    for data_folder_name, dict_cooked_from_folder in dict_all.iteritems():
+        for level in dict_cooked_from_folder:
+            for axis in dict_cooked_from_folder[level]:
+                if dict_cooked_from_folder[level][axis] == None:
+                   raise Exception("empty axis data"); 
+                
+                # Extract all features for a level/axis and create a list. Use the list to write to file. 
+                import inc.label_mapping as label_mapping
+                list_of_features = [label_mapping.label_mapping_dict[level][i] for i in dict_cooked_from_folder[level][axis]]
+                file.write('\t'.join(list_of_features)+'\t')
+        file.write(label+'\n')
 
-    for level in dict_cooked_from_folder:
-        axis_already_out = 0
-        for axis in dict_cooked_from_folder[level]:
-            if dict_cooked_from_folder[level][axis] == None:
-                break
-            output_width = len(dict_cooked_from_folder[level][axis])
-            axis_already_out += 1
-            
-            # Extract all features for a level/axis and create a list. Use the list to write to file. 
-            import inc.label_mapping as label_mapping
-            list_of_features = [label_mapping.label_mapping_dict[level][i] for i in dict_cooked_from_folder[level][axis]]
-            file.write('\t'.join(list_of_features)+'\t')
-            
-            # For each label provide an equivallent color.
-            output_pixels += [kelly_colors_hex[int(i)] for i in list_of_features]
-            file.write(label+'\n')
-    
-        # Create an image template for the corresponding number of slices and 6 axis
-        output_img = Image.new("RGB", (output_width, 6)) # mode,(width,height)
-        
-        # Insert colors int the structure
-        output_img.putdata(output_pixels)
-        zoom = 30
-        output_img = output_img.resize((output_width*zoom, 6*zoom))
-        output_img.save(os.path.join(img_folder, str(img_name_count)+'.png'))
-        img_name_count += 1
-    file.close()
-    
 # Prints one image for each axis of all trials. 
 def output_sample_all_trial(file, label, dict_cooked_allFiles,folder_names,numTrials,training_data_dir):
 
     # Globals    
-    global img_name_count
     global initFlag
     
     # Image Directory

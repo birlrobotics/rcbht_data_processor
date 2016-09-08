@@ -25,7 +25,7 @@ def main():
     successFlag=1
     failureFlag=1
     hlStatesFlag=1
-    output_per_one_trial_flag=0 # if true, output is performed for each trial for all axis. Otherwise all trials for each axis is displayed.
+    output_per_one_trial_flag=1 # if true, output is performed for each trial for all axis. Otherwise all trials for each axis is displayed.
 
     # What kind of success_strategy will you analyze
     success_strategy='SIM_HIRO_ONE_SA_SUCCESS'
@@ -106,7 +106,7 @@ def main():
         for level in levels:
             folder_dims[level] = {}
             for axis in axes:
-                folder_dims[level][axis]={}
+                folder_dims[level][axis]=0
         
         # Create a dictionary structure for all trials, RCBHT levels, and axis.
         for data_folder_name in data_folder_names:
@@ -144,12 +144,10 @@ def main():
                     # Create the allTrialsLables structure. It is organized by: state/trials/level/axis. Only contains labels.
                     allTrialLabels[data_folder_name]=deepcopy(dict_all[data_folder_name])  
             
-                if not os.path.exists(os.path.join(base_dir, '..', 'my_training_data', 'img_of_success')):
-                    os.makedirs(os.path.join(base_dir, '..', 'my_training_data', 'img_of_success'))
                         
                 # label s indicates SUCCESS. Have a file and a place to put images
                 if output_per_one_trial_flag:
-                    output_features.output_sample_one_trial(file_for_success_set, 's', dict_cooked_from_folder, os.path.join(base_dir, '..', 'my_training_data', 'img_of_success'))
+                    output_features.output_sample_one_trial(file_for_success_set, 's', allTrialLabels)
                 else:
                     output_features.output_sample_all_trial(file_for_success_set, 's', allTrialLabels,data_folder_names,numTrials,os.path.join(base_dir, '..', 'my_training_data',strategy))
                 
@@ -190,7 +188,7 @@ def main():
         for level in levels:
             folder_dims[level] = {}
             for axis in axes:
-                folder_dims[level][axis]={}
+                folder_dims[level][axis]=0
         
         # Get full path for each folder name
         for data_folder_name in failure_data_folder_names:
@@ -230,13 +228,11 @@ def main():
                     allTrialLabels[data_folder_name]=deepcopy(dict_all[data_folder_name]) 
                 
                     
-                if not os.path.exists(os.path.join(base_dir, '..', 'my_training_data', 'img_of_fail')):
-                     os.makedirs(os.path.join(base_dir, '..', 'my_training_data', 'img_of_fail'))                 
                 
                 # Write labels and images to file. 2 choices: individual iterations or all iterations per state.            
                 # label f indicates SUCCESS. Have a file and a place to put images
                 if output_per_one_trial_flag:
-                    output_features.output_sample_one_trial(file_for_fail_set, 'f', dict_cooked_from_folder, os.path.join(base_dir, '..', 'my_training_data', 'img_of_failure'))            
+                    output_features.output_sample_one_trial(file_for_fail_set, 'f', allTrialLabels); 
                 else:
                     output_features.output_sample_all_trial(file_for_fail_set, 'f', allTrialLabels,failure_data_folder_names, numTrials,os.path.join(base_dir, '..', 'my_training_data',failure_strategy))
                 
@@ -257,6 +253,7 @@ def main():
     ## Parse information by State 
     #-------------------------------------------------------------------------
     if hlStatesFlag:
+        strategy=success_strategy    
         #generate training data from SIM to classify automata states
 
         from inc.states import states
@@ -264,7 +261,7 @@ def main():
         
         # Open files for each of the states we will analyze
         for state in states:
-            files_for_states[state] = open(os.path.join(base_dir,'..', 'my_training_data', "training_set_for_"+state), 'w')    
+            files_for_states[state] = open(os.path.join(base_dir,'..', 'my_training_data', strategy, "training_set_for_"+state), 'w')    
 
         data_folder_prefix = os.path.join(results_dir, success_strategy)
         orig_data_folder_names = os.listdir(data_folder_prefix)
@@ -283,7 +280,7 @@ def main():
             for level in levels:
                 folder_dims[state][level] = {}
                 for axis in axes:
-                    folder_dims[state][level][axis]={}            
+                    folder_dims[state][level][axis]=0           
                 
         # Create a dictionary structure for all trials, RCBHT levels, and axis.
         for data_folder_name in data_folder_names:
@@ -343,9 +340,9 @@ def main():
                     # Write labels and images to file. 2 choices: individual iterations or all iterations per state.
                     # label 1 indicates SUCCESS. Have a file and a place to put images
                     if output_per_one_trial_flag:
-                        output_features.output_sample_one_trial(files_for_states[state], str(states.index(state)), dict_cooked_from_folder[state], os.path.join(base_dir, '..', 'my_training_data', 'img_of_'+state))
+                        output_features.output_sample_one_trial(files_for_states[state], state, allTrialLabels[state])
                     else:
-                        output_features.output_sample_all_trial(files_for_states[state], str(states.index(state)), allTrialLabels[state],data_folder_names,numTrials,os.path.join(base_dir, '..', 'my_training_data',hlb_dir))
+                        output_features.output_sample_all_trial(files_for_states[state], state, allTrialLabels[state],data_folder_names,numTrials,os.path.join(base_dir, '..', 'my_training_data',hlb_dir))
             
                     
             else:

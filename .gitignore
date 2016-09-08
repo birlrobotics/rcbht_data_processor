@@ -2,3 +2,6 @@
 my_training_data/
 *.py~
 *.pyc
+.*
+!.gitignore
+
