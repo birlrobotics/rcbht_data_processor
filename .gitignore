@@ -1,4 +1,4 @@
 # Folders
-*/my_training_data
-.py~
-.pyc
+my_training_data/
+*.py~
+*.pyc
