@@ -43,7 +43,8 @@ kelly_colors_hex = map(hex_to_rgb, kelly_colors_hex)
 
 # Prints one image for each iterataion containing data for FxyzMxyz (if we do this) we require that FxyzMxyz are all of the same length
 # Same length data is produced in data_feature_extractor.p::slice_and_find_mode
-def output_sample_one_trial(file, label, dict_all):
+def output_sample_one_trial(file, label, dict_all, img_path):
+    output_pixels = []
     for data_folder_name, dict_cooked_from_folder in dict_all.iteritems():
         for level in dict_cooked_from_folder:
             for axis in dict_cooked_from_folder[level]:
@@ -53,7 +54,19 @@ def output_sample_one_trial(file, label, dict_all):
                 import inc.label_mapping as label_mapping
                 list_of_features = [label_mapping.label_mapping_dict[level][i] for i in dict_cooked_from_folder[level][axis]]
                 file.write(','.join(list_of_features)+',')
+                output_pixels += [kelly_colors_hex[int(i)] for i in list_of_features]                
         file.write(label+'\n')
+
+    img_height = len(dict_all)
+    img_width = len(output_pixels)/img_height
+
+
+    output_img = Image.new("RGB", (img_width, img_height)) # mode,(width,height)
+    output_img.putdata(output_pixels)
+    zoom = 1 
+    output_img = output_img.resize((img_width*zoom, img_height*zoom))
+    output_img.save(img_path)
+
 
 # Prints one image for each axis of all trials. 
 def output_sample_all_trial(file, label, dict_cooked_allFiles,folder_names,numTrials,training_data_dir):
@@ -113,7 +126,7 @@ def output_sample_all_trial(file, label, dict_cooked_allFiles,folder_names,numTr
             
             # Insert colors int the structure
             output_img.putdata(output_pixels)
-            zoom = 1 
+            zoom = 50 
             output_img = output_img.resize((output_width*zoom, 6*zoom))
             output_img.save(os.path.join(training_data_dir,img_dir, level[:3]+axis+'.png'))
             
