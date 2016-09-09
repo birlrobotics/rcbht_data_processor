@@ -85,7 +85,7 @@ def main():
 
     if successAndFailFlag:
         strategy=success_strategy    
-        file_for_success_set = open(os.path.join(base_dir, '..', 'my_training_data', strategy, 'training_set_of_success'), 'w')
+        file_for_SF_classification = open(os.path.join(base_dir, '..', 'my_training_data', strategy, 'training_set_of_SF'), 'w')
         
         
         # Get Folder names
@@ -197,9 +197,9 @@ def main():
             data_feature_extractor.extract_features(dict_all[data_folder_name],folder_dims)
             allTrialLabels[data_folder_name]=deepcopy(dict_all[data_folder_name])  
         if output_per_one_trial_flag:
-            output_features.output_sample_one_trial(file_for_success_set, '1', allTrialLabels)
+            output_features.output_sample_one_trial(file_for_SF_classification, '1', allTrialLabels)
         else:
-            output_features.output_sample_all_trial(file_for_success_set, 's', allTrialLabels, allTrialLabels.keys(), len(allTrialLabels), os.path.join(base_dir, '..', 'my_training_data',success_strategy))
+            output_features.output_sample_all_trial(file_for_SF_classification, 's', allTrialLabels, allTrialLabels.keys(), len(allTrialLabels), os.path.join(base_dir, '..', 'my_training_data',success_strategy))
 
         dict_dims={}
         dict_all={}
@@ -214,9 +214,9 @@ def main():
             data_feature_extractor.extract_features(dict_all[data_folder_name],folder_dims)
             allTrialLabels[data_folder_name]=deepcopy(dict_all[data_folder_name])  
         if output_per_one_trial_flag:
-            output_features.output_sample_one_trial(file_for_fail_set, '0', allTrialLabels); 
+            output_features.output_sample_one_trial(file_for_SF_classification, '0', allTrialLabels); 
         else:
-            output_features.output_sample_all_trial(file_for_fail_set, 'f', allTrialLabels, allTrialLabels.keys(), len(allTrialLabels), os.path.join(base_dir, '..', 'my_training_data',failure_strategy))
+            output_features.output_sample_all_trial(file_for_SF_classification, 'f', allTrialLabels, allTrialLabels.keys(), len(allTrialLabels), os.path.join(base_dir, '..', 'my_training_data',failure_strategy))
 
         # Clear up
         folder_dims={}
@@ -239,9 +239,12 @@ def main():
         from inc.states import states
         files_for_states = {}
         
+
+        file_for_states_classification = open(os.path.join(base_dir,'..', 'my_training_data', strategy, "training_set_for_states"), 'w')    
+
         # Open files for each of the states we will analyze
         for state in states:
-            files_for_states[state] = open(os.path.join(base_dir,'..', 'my_training_data', strategy, "training_set_for_"+state), 'w')    
+            files_for_states[state] = file_for_states_classification 
 
         data_folder_prefix = os.path.join(results_dir, success_strategy)
         orig_data_folder_names = os.listdir(data_folder_prefix)

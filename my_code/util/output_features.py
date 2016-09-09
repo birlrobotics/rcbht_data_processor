@@ -113,7 +113,7 @@ def output_sample_all_trial(file, label, dict_cooked_allFiles,folder_names,numTr
             
             # Insert colors int the structure
             output_img.putdata(output_pixels)
-            zoom = 30
+            zoom = 1 
             output_img = output_img.resize((output_width*zoom, 6*zoom))
             output_img.save(os.path.join(training_data_dir,img_dir, level[:3]+axis+'.png'))
             
