@@ -24,7 +24,7 @@ def main():
     ## Flags
     successAndFailFlag=1
     hlStatesFlag=1
-    output_per_one_trial_flag=1 # if true, output is performed for each trial for all axis. Otherwise all trials for each axis is displayed.
+    output_per_one_trial_flag=0 # if true, output is performed for each trial for all axis. Otherwise all trials for each axis is displayed.
 
     # What kind of success_strategy will you analyze
     success_strategy='SIM_HIRO_ONE_SA_SUCCESS'
@@ -197,7 +197,7 @@ def main():
             data_feature_extractor.extract_features(dict_all[data_folder_name],folder_dims)
             allTrialLabels[data_folder_name]=deepcopy(dict_all[data_folder_name])  
         if output_per_one_trial_flag:
-            output_features.output_sample_one_trial(file_for_success_set, 's', allTrialLabels)
+            output_features.output_sample_one_trial(file_for_success_set, '1', allTrialLabels)
         else:
             output_features.output_sample_all_trial(file_for_success_set, 's', allTrialLabels, allTrialLabels.keys(), len(allTrialLabels), os.path.join(base_dir, '..', 'my_training_data',success_strategy))
 
@@ -207,7 +207,7 @@ def main():
             data_feature_extractor.extract_features(dict_all[data_folder_name],folder_dims)
             allTrialLabels[data_folder_name]=deepcopy(dict_all[data_folder_name])  
         if output_per_one_trial_flag:
-            output_features.output_sample_one_trial(file_for_fail_set, 'f', allTrialLabels); 
+            output_features.output_sample_one_trial(file_for_fail_set, '0', allTrialLabels); 
         else:
             output_features.output_sample_all_trial(file_for_fail_set, 'f', allTrialLabels, allTrialLabels.keys(), len(allTrialLabels), os.path.join(base_dir, '..', 'my_training_data',failure_strategy))
 
@@ -301,7 +301,7 @@ def main():
                 # Write labels and images to file. 2 choices: individual iterations or all iterations per state.
                 # label 1 indicates SUCCESS. Have a file and a place to put images
                 if output_per_one_trial_flag:
-                    output_features.output_sample_one_trial(files_for_states[state], state, allTrialLabels[state])
+                    output_features.output_sample_one_trial(files_for_states[state], str(states.index(state)), allTrialLabels[state])
                 else:
                     output_features.output_sample_all_trial(files_for_states[state], state, allTrialLabels[state], data_folder_names, numTrials, os.path.join(base_dir, '..', 'my_training_data',hlb_dir))
         else:
