@@ -1,11 +1,38 @@
 #!/usr/bin/python
-# Authored by: Victoria O'Neill and Matthew Farr
+######################################################################
+# Determine the score of the longest common sequence. 
+# Authored by: Hane1818
 # Modified by Juan Rojas
-DB_PRINT=0
+######################################################################
+
+def longestCommonSequence(a, b):
+    a_len, b_len=len(a),len(b)
+    buffer = [[0 for jj in range(b_len+1)] for ii in range(a_len+1)]
+
+    for ii, x in enumerate(a):
+        for jj, y in enumerate(b):
+            if x == y:
+                buffer[ii+1][jj+1] = buffer[ii][jj]+1
+            else:
+                buffer[ii+1][jj+1] = 0
+
+    max_len = -1
+    max_index = -1
+    for ii in range(a_len):
+        for jj in range(b_len):
+            if buffer[ii+1][jj+1] > max_len:
+                max_len = buffer[ii+1][jj+1]
+                max_index = ii+1
+
+    return a[max_index-max_len:max_index]
 
 ######################################################################
 # Determine the score of the longest common subsequence of two strings
-# students: complete this function
+# students: complete this function. Subsequence implies skipping
+# over letters that are not contained in the other string but which 
+# are followed by more letters that are.
+# Authored by: Victoria O'Neill and Matthew Farr
+# Modified by Juan Rojas
 ######################################################################
 def longestCommonSubsequence(s1, s2):
 
@@ -155,6 +182,7 @@ def printTable(table, filename):
 # of the output file
 ###############################################################
 def align(direction, s1, s2, row, col, filename):
+    DB_PRINT=0
     lcs=''    
     if DB_PRINT:
         file = open(filename, 'w')

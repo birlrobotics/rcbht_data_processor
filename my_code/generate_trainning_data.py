@@ -65,8 +65,10 @@ global axes
 
 # lists
 states=['approach','rotation','insertion','mating']
-levels=['primitive', 'composite', 'llbehavior']
+#levels=['primitive', 'composite', 'llbehavior']
+levels=['llbehavior']
 axes=['Fx','Fy','Fz','Mx','My','Mz']
+#axes=['Fx','Fy','Fz','My']
 train_validate=['train','validate']
 
 # Dictionaries
@@ -182,8 +184,8 @@ if successFlag:
     
     # Assign the current strategy directory
     strategy             = success_strategy     
-    strat_dir            = os.path.join(train_data_dir,strategy,)             
-    file_for_success_set = open(os.path.join(strat_dir, 'training_set_of_success'), 'w')
+    exp_dir            = os.path.join(train_data_dir,strategy,)             
+    file_for_success_set = open(os.path.join(exp_dir, 'training_set_of_success'), 'w')
     
     
     # Get Folder names
@@ -230,9 +232,9 @@ if successFlag:
             for level in levels:
                 for axis in axes:                            
                     for data_folder_name in data_folder_names:                
-                        temp=dict_dims[data_folder_name][level][axis] 
-                        if temp > folder_dims[level][axis]:
-                            folder_dims[level][axis]=temp
+                        commonString=dict_dims[data_folder_name][level][axis] 
+                        if commonString > folder_dims[level][axis]:
+                            folder_dims[level][axis]=commonString
         
             # For each trial, take the dictionary and reshape it (change number of iterations), output is the same NUMBER of labels for all axes.             
             try:
@@ -260,7 +262,7 @@ if successFlag:
                     output_features.output_sample_one_trial(file_for_success_set, 's', dict_cooked_from_folder, os.path.join(base_dir, '..', 'my_training_data', 'img_of_success'))
                 else:
                     if sliceLabels: # TODO Currently only execute if we are slciing. Need to modify image. 
-                        output_features.output_sample_all_trial(file_for_success_set, 's', allTrialLabels,data_folder_names,numTrials,strat_dir)
+                        output_features.output_sample_all_trial(file_for_success_set, 's', allTrialLabels,data_folder_names,numTrials,exp_dir)
             except:
                 type, value, tb = sys.exc_info()
                 traceback.print_exc()
@@ -395,11 +397,11 @@ if hlStatesFlag:
         strategy=raw_input('Please enter a name for the strategy: \n')
 
     # Assign the current strategy directory    
-    strat_dir = os.path.join(train_data_dir,strategy,)     
+    exp_dir = os.path.join(train_data_dir,strategy,)     
     
     # Open files for each of the states we will analyze
     for state in states:
-        files_for_states[state] = open(os.path.join(strat_dir, "training_set_for_"+state), 'w')    
+        files_for_states[state] = open(os.path.join(exp_dir, "training_set_for_"+state), 'w')    
 
     data_folder_prefix = os.path.join(results_dir, success_strategy)
     orig_data_folder_names = os.listdir(data_folder_prefix)
@@ -486,23 +488,23 @@ if hlStatesFlag:
                     allTrialLabels[state][data_folder_name]=deepcopy(dict_all[data_folder_name][state])
 
             # Save allTrialLabels to File using pickle
-            with open(os.path.join(strat_dir,hlb_pickle), 'wb') as handle:
+            with open(os.path.join(exp_dir,hlb_pickle), 'wb') as handle:
                 pickle.dump(allTrialLabels, handle, protocol=pickle.HIGHEST_PROTOCOL)                               
                         
             ## Create directories to keep both labels and images in file
             for state in dict_cooked_from_folder:
                 hlb_dir='img_of_'+state
-                if not os.path.exists( os.path.join(strat_dir, hlb_dir) ):
-                    os.makedirs(os.path.join(strat_dir, hlb_dir))
+                if not os.path.exists( os.path.join(exp_dir, hlb_dir) ):
+                    os.makedirs(os.path.join(exp_dir, hlb_dir))
                 
                 # Write labels and images to file. 2 choices: individual iterations or all iterations per state.
                 try:
                     # label 1 indicates SUCCESS. Have a file and a place to put images
                     if output_per_one_trial_flag:
-                        output_features.output_sample_one_trial(files_for_states[state], str(states.index(state)), dict_cooked_from_folder[state], os.path.join(strat_dir, hlb_dir))
+                        output_features.output_sample_one_trial(files_for_states[state], str(states.index(state)), dict_cooked_from_folder[state], os.path.join(exp_dir, hlb_dir))
                     else:
                         if sliceLabels: # TODO Currently only execute if we are slciing. Need to modify image. 
-                            output_features.output_sample_all_trial(files_for_states[state], str(states.index(state)), allTrialLabels[state],data_folder_names,numTrials,os.path.join(strat_dir,hlb_dir))
+                            output_features.output_sample_all_trial(files_for_states[state], str(states.index(state)), allTrialLabels[state],data_folder_names,numTrials,os.path.join(exp_dir,hlb_dir))
             
                 except:
                     type, value, tb = sys.exc_info()
@@ -612,17 +614,17 @@ if jaccard:
         get_allTrial_Labels=1
 
         # Assign the current strategy directory    
-        strat_dir = os.path.join(train_data_dir,strategy,)      
+        exp_dir = os.path.join(train_data_dir,strategy,)      
     
     # Create a classification folder and get the results folder
     directory='jaccard'
-    classification_dir=os.path.join(strat_dir,directory)
+    classification_dir=os.path.join(exp_dir,directory)
     if not os.path.exists(classification_dir):
         os.makedirs(classification_dir) 
             
     # If you want to deserialize saved data
     if loadFromFileFlag:        
-        with open(os.path.join(strat_dir,hlb_pickle), 'rb') as handle:
+        with open(os.path.join(exp_dir,hlb_pickle), 'rb') as handle:
            allTrialLabels = pickle.load(handle)            
 
     # Get Folder names
@@ -680,7 +682,7 @@ if jaccard:
     # Structures 
     # kfold_list:               contains indeces for train/validate trials for each fold: kfold x train|validate x elems   
     # jacard axis t/v list:     contains 1x6 final labels for train union set and test set. It is a 1x6 set per fold/train/state/level
-    # permutation_matrix:       contains results of int/union permutations. level x states x (statesxaxes)       
+    # similarity_permutation_matrix:       contains results of int/union permutations. level x states x (statesxaxes)       
     # state_probability array:  computes p(AB) like operations. squishes permutation. final state_probability under fold/level: state/state (4x4)    
     # avg_prob_vector:          computes normalized probabilities over folds. level x states x states
     # classification_vector:    computes percentage of correct classification for states. level x states x states
@@ -703,7 +705,7 @@ if jaccard:
     # ... Rot_train \cap App_validate | Rot_train \cap Rot_validate ... | Rot_train \cap Mat_validate 
     # ... 
     # ... Mat_train \cap App_validate | Mat_train \cap Rot_validate ... | Mat_train \cap Mat_validate
-    permutation_matrix   =np.zeros( ( kfold,l_len,s_len,( s_len*a_len ),1) ) 
+    similarity_permutation_matrix   =np.zeros( ( kfold,l_len,s_len,( s_len*a_len ),1) ) 
     state_probability    =np.ones( ( kfold,l_len,s_len,s_len,1) )
                  
     avg_prob_vector      =np.zeros( ( l_len,s_len,s_len,1) )                     
@@ -753,7 +755,7 @@ if jaccard:
         for s in range(s_len):
             for l in range(l_len): 
                 for p,a in itertools.product( range(s_len),range(a_len) ): # permutations of states with axes 4x6=24 label sets
-                    permutation_matrix[k][l][s][p*a_len+a] = ( 
+                    similarity_permutation_matrix[k][l][s][p*a_len+a] = ( 
                                                                                                   #fixed trial index                                   state permutation 
                                                                 float(  len( jaccard_axis_train[k][0][s][l][a].intersection(jaccard_axis_validate[k][0][p][l][a]) )) / 
                                                                 float(  len( jaccard_axis_train[k][0][s][l][a].union       (jaccard_axis_validate[k][0][p][l][a]) )) 
@@ -767,7 +769,7 @@ if jaccard:
         for l in range(l_len):
             for s in range(s_len): 
                 for p,a in itertools.product( range(s_len),range(a_len) ):
-                    state_probability[k][l][s][p] *= permutation_matrix[k][l][s][p*a_len+a]                   
+                    state_probability[k][l][s][p] *= similarity_permutation_matrix[k][l][s][p*a_len+a]                   
                 denominator=np.sum(state_probability[k][l][s])
                 if denominator==0:
                     denominator=1.0 # num=0,avoids a division by zero to produce a nan
@@ -850,18 +852,18 @@ if lcss:
         get_allTrial_Labels=1
 
     # Assign the current strategy directory    
-    strat_dir = os.path.join(train_data_dir,strategy)      
+    exp_dir = os.path.join(train_data_dir,strategy)      
     
     # Create a classification folder and get the results folder
     directory='lcss'
-    classification_dir=os.path.join(strat_dir,directory)
+    classification_dir=os.path.join(exp_dir,directory)
     if not os.path.exists(classification_dir):
         os.makedirs(classification_dir) 
             
     # If you want to deserialize saved data
     if not bool(allTrialLabels): 
         if loadFromFileFlag:
-            with open(os.path.join(strat_dir,hlb_pickle), 'rb') as handle:
+            with open(os.path.join(exp_dir,hlb_pickle), 'rb') as handle:
                allTrialLabels = pickle.load(handle)            
 
     # Get Folder names in the results directory
@@ -885,7 +887,7 @@ if lcss:
     #--------------------------------------------------------------------------
     # Initialize k-fold data to a valid integer
     kfold=numTrials
-    
+    #kfold=1
     # Crossfold training and testing generator
     kf=cross_validation.LeaveOneOut(numTrials)
                     
@@ -925,14 +927,12 @@ if lcss:
     #                           the 2nd column will indicate the frequency with which ther term appeared, for fold/level/state/axis
     # similarity:               takes similarity values for all axes for a given state/level/fold. 
     # results:                  keep results for 3 levels and 4 states 3x4.
-    lcss_trials_mat=[ [ [ [ [ [ [] for ff in range(2)]                      # [lcss entry | frequency]
-                                    for tt in range(1)]
-                                        for aa in range(a_len)]                        
-                                            for ss in range(s_len)]
-                                                for ll in range(l_len)]
-                                                    for kk in range(kfold)]
+    lcss_trials_mat=[ [ [ [ [] for aa in range(a_len)]                        
+                                   for ss in range(s_len)]
+                                       for ll in range(l_len)]
+                                           for kk in range(kfold)]
                                                 
-    permutation_matrix   =np.zeros( ( kfold,l_len,s_len,( s_len*a_len ),1) ) 
+    similarity_permutation_matrix   =np.zeros( ( kfold,l_len,s_len,( s_len*a_len ),1) ) 
     sim_state_metric     =np.zeros( ( kfold,l_len,s_len,s_len,1) )    
 
     similarity=[ [ [ [] for ss in range(s_len)]                
@@ -944,165 +944,134 @@ if lcss:
 #------------------------------------------------------------------------------
 # Compute LCSS for training samples for each fold/level/state/axis
 # Separate training samples from one test trial (across folds).
-# Compare the first appropriate training element, with the rest. Keep the longest lcss.
-# Take this oportunity to encode rcbht labels into an a-z alphabet for simpler string comparison later on.     
+# 1. Compare training sequence 0 (in given kfold) with ith training sequence (i!=0)
+# 2. Compare that similarity with contents in lcss_trials_mat[k][l][s][a][0]
+#    - If structure already exists, increase frequency by 1.
+#    - Otherwise append.
+# 3. Testing
+#    - Compare validation string with list of common sequences.
+#    - Take match similarity distance and its frequency and use it to compute the similarity metric.
+# 
+# Note: RCBHT strings will be encoded into an a-z alphabet for simpler string 
+# comparison (single char) and in case we integrate multiple levels.    
+ #------------------------------------------------------------------------------   
 #    if loadFromFileFlag:
-#        if os.path.isfile(os.path.join(strat_dir,trial_lcss_mat_pickle)):                                               
-#            with open(os.path.join(strat_dir,trial_lcss_mat_pickle),'rb') as handle:
+#        if os.path.isfile(os.path.join(exp_dir,trial_lcss_mat_pickle)):                                               
+#            with open(os.path.join(exp_dir,trial_lcss_mat_pickle),'rb') as handle:
 #                lcss_trials_mat=pickle.load(handle)  
     
     # IF there is no data (not loaded from file) then create lcss_trials_mat                             
-    if not bool(lcss_trials_mat[0][0][0][0][0][0]):
-        for k in range(kfold):
-            for l,level in enumerate(levels):
-                for s,state in enumerate(states):
-                    for a,axis in enumerate(axes):
-                        for i in xrange(train_len):   
-                            if i==0:                # on the first round of permutations only calculate the encoding once. after that, strSeq1 will be the same.
+    if not bool(lcss_trials_mat[0][0][0][0]):        
+        for kk in range(kfold):
+            for ll,level in enumerate(levels):
+                for ss,state in enumerate(states):
+                    for aa,axis in enumerate(axes):
+                        currMax=0 # For each new axis, reset similarity length counter
+                        for ii in xrange(train_len):   
+                            if ii==0:                # on the first round of permutations only calculate the encoding once. after that, strSeq1 will be the same.
                                 # Perform similarity calculations across trials                #train index
-                                strSeq1 = allTrialLabels[state][ data_folder_names[ kf_list[k][0][0] ]][level][axis] 
+                                strSeq1 = allTrialLabels[state][ data_folder_names[ kf_list[kk][0][0] ]][level][axis] 
                                 lbl.encodeRCBHTList(strSeq1,level)    
     
                             else: # don't evaluate the diagonal (same trial)
-                                strSeq2 = allTrialLabels[state][ data_folder_names[ kf_list[k][0][i] ]][level][axis]
+                                strSeq2 = allTrialLabels[state][ data_folder_names[ kf_list[kk][0][ii] ]][level][axis]
                                 lbl.encodeRCBHTList(strSeq2,level)
                                 try:     
                                     if DB_PRINT:
-                                        print 'fold: ' + str(k) + ' level: ' + str(l) + ' state: ' + str(s) + ' axes: ' + str(a) + ' index i: ' + str(i)
-                                    temp=lcs.LCS.longestCommonSubsequence(strSeq1,strSeq2)  # may sometimes have no overlap ""
+                                        print 'fold: ' + str(kk) + ' level: ' + str(ll) + ' state: ' + str(ss) + ' axes: ' + str(aa) + ' index ii: ' + str(ii)
+                                    # 1. Compare training sequence 0 with ith sequence
+                                    commonString=lcs.LCS.longestCommonSequence(strSeq1,strSeq2)  # may sometimes have no overlap ""
                                 except:
                                     print 'error found in lcss computation'
                                     type, value, tb = sys.exc_info()
                                     traceback.print_exc()
                                     ipdb.post_mortem(tb)  
-                                # ONLY record an lcss if its longer than existing instances in current or previous trials                                
-                                # For the first trial run:
-                                
-                                # 2. Find the max value. If already exists, increase counter.
-                                #currMax=max(lcss_trials_mat[k][l][s][a][i][0] or ['e'],key=len)
-                                currMax=len(lcss_trials_mat[k][l][s][a][0][0])
-                                if currMax==0: #'e': # if list is empty assign directly
-                                    lcss_trials_mat[k][l][s][a][0][0]=deepcopy(temp) # Place results in the first row
-                                    if lcss_trials_mat[k][l][s][a][0][1]==[]:
-                                        lcss_trials_mat[k][l][s][a][0][1]=1 # count the number of times this value appears
+                                    
+                                # 2. Insert common string/frequency into the 0th index  
+                                # Check length of 0th index
+                                list_len=len(lcss_trials_mat[kk][ll][ss][aa])
+                                if list_len==0:
+                                    temp=[commonString,1]
+                                    lcss_trials_mat[kk][ll][ss][aa].append(temp)
+                                else:                                    
+                                    for jj in xrange(list_len):                                                                                                                                              
+                                        if commonString == lcss_trials_mat[kk][ll][ss][aa][jj][0]: 
+                                            # A. Seen before
+                                            lcss_trials_mat[kk][ll][ss][aa][jj][1]+=1   
+                                            break;
+                                    # B. Not seen before
                                     else:
-                                        lcss_trials_mat[k][l][s][a][0][1]+=1 # count the number of times this value appears
-                                    currMax=len(temp)
-                                else:                                                                                                            
-                                    if len(temp) > currMax:
-                                        # 2. Find the max value. If already exists, increase counter.
-                                        lcss_trials_mat[k][l][s][a][0][0]=deepcopy(temp)
-                                        if lcss_trials_mat[k][l][s][a][0][1]==[]:
-                                            lcss_trials_mat[k][l][s][a][0][1]=1 # count the number of times this value appears
-                                        else:
-                                            lcss_trials_mat[k][l][s][a][0][1]+=1  
-                                        currMax=len(temp)
-        
-    
+                                        temp=[commonString,1]
+                                        lcss_trials_mat[kk][ll][ss][aa].append(temp)
+            
         # Very time consuming structure to produce. Save it here.     
-        with open(os.path.join(strat_dir,'oneloop_',trial_lcss_mat_pickle),'wb') as handle:        
+        with open(os.path.join(classification_dir,'trial_lcss_mat_pickle'),'wb') as handle:        
             pickle.dump(lcss_trials_mat,handle,protocol=pickle.HIGHEST_PROTOCOL)        
-        
-    # Dictionary     
-    # Go through the structure once again. This time we will squash repeated lcss across the different trial combinations and end up
-    # with a dictionary for each fold/level/state/axis.
-#    tempIdx=[]
-#    for k in range(kfold):
-#        for l,level in enumerate(levels):
-#            for s,state in enumerate(states):
-#                for a,axis in enumerate(axes):
-#                    tempLen=len(lcss_trials_mat[k][l][s][a])
-#                    i=0
-#                    while i<tempLen:
-#                        for j in range(tempLen):   
-#                            if i!=j:
-#                                # IF the string is the same, collect the index
-#                                if lcss_trials_mat[k][l][s][a][i][0]==lcss_trials_mat[k][l][s][a][j][0]:
-#                                    tempIdx.append(j)                                                       # keep the index
-#                                    lcss_trials_mat[k][l][s][a][i][1]+=lcss_trials_mat[k][l][s][a][j][1]    # add ctr 
-#                                
-#                        # Remove all repeated elements starting from the back. This forms the dictionary.
-#                        for j in list(reversed(range(len(tempIdx)))):
-#                            del lcss_trials_mat[k][l][s][a][ tempIdx[j] ]
-#                        tempLen=len(lcss_trials_mat[k][l][s][a])
-#                        tempIdx=[]
-#                        i+=1
-#                        
-#                    # One more round to catch a few empty lists left by mistake
-#                    mm=0
-#                    tempLen=len(lcss_trials_mat[k][l][s][a])                    
-#                    while mm < tempLen:                   
-#                        if lcss_trials_mat[k][l][s][a][mm][0]==[]: # Do not increment counter if we delete an entry, since list shrinks
-#                            del lcss_trials_mat[k][l][s][a][mm]
-#                            tempLen=len(lcss_trials_mat[k][l][s][a])
-#                        else:
-#                            mm+=1                                                     
-                    
+                     
     #--------------------------------------------------------------------------                
     # Similarity Permutation Matrix.
+    # Compare validation test with dictionary in each level/state/axis. We expect high similarity for the same state.
     # For each fold/level there are m states each with m tests (each with n axis)
     # ... App_train \cap App_validate | App_train \cap Rot_validate ... | App_train \cap Mat_validate ... (mx(mxn)
     # ... Rot_train \cap App_validate | Rot_train \cap Rot_validate ... | Rot_train \cap Mat_validate 
     # ... 
     # ... Mat_train \cap App_validate | Mat_train \cap Rot_validate ... | Mat_train \cap Mat_validate
     #--------------------------------------------------------------------------                                      
-    for k in range(kfold):
-        for l,level in enumerate(levels):
-            for s,state in enumerate(states):
-                for p,a in itertools.product( range(s_len),range(a_len) ):
+    for kk in range(kfold):
+        for ll,level in enumerate(levels):
+            for ss,state in enumerate(states):
+                for pp,aa in itertools.product( range(s_len),range(a_len) ):
                                                                             
-                    dict_len=len(lcss_trials_mat[k][l][s][a])
+                    dict_len=len(lcss_trials_mat[kk][ll][ss][aa])
                     if dict_len == 0:
-                        scalar = 1
-                        if DB_PRINT:
-                            print 'dictionary length is 0 for fold: ' + str(k) + ' level: ' + str(l) + ' state: ' + str(s) + ' axes: ' + str(a)
-                    else:
-                        scalar=1.0/dict_len
+                        print 'dictionary length is 0 for fold: ' + str(kk) + ' level: ' + str(ll) + ' state: ' + str(ss) + ' axes: ' + str(aa)
                     
-                    # Extract an lcss string between the single validate instance and each of the dictionary entries
-                    for i in range(dict_len):                          
+                    # Extract an lcss string between the single validate instance and each of the dictionary entries for a given axis
+                    for ii in xrange(dict_len):                          
                         
-                        if i==0:
+                        # Get validation string for current level/state/axis
+                        if ii==0:
                             if DB_PRINT:
-                                print 'fold: ' + str(k) + ' level: ' + str(l) + ' state: ' + str(s) + ' axes: ' + str(a)
-                            # Get encode validate string for permutated state          #validate index
-                            strSeq1 = allTrialLabels[ states[p] ][ data_folder_names[ kf_list[k][1][0] ]][level][ axes[a] ] 
-                            lbl.encodeRCBHTList(strSeq1,level)                              # still need to encode the validate instance
+                                print 'fold: ' + str(kk) + ' level: ' + str(ll) + ' state: ' + str(ss) + ' axes: ' + str(aa)
+                            
+                            # Get encode validate string for permutated state as a single string                        #validate index
+                            strSeq_validate = allTrialLabels[ states[pp] ][ data_folder_names[ kf_list[kk][1][0] ]][level][ axes[aa] ] 
+                            lbl.encodeRCBHTList(strSeq_validate,level)                              # still need to encode the validate instance
+                            strSeq_validate = ''.join(strSeq_validate)
 
-                        # Get ith dictionary for training data for current state
-                        strSeq2     = lcss_trials_mat[k][l][s][a][i][0]
-                        if strSeq2!=[]: # check for leftover emtpy lists (need to fix)
-                            strSeq2_freq= lcss_trials_mat[k][l][s][a][i][1]
-                                                                  
-                            temp=lcs.LCS.longestCommonSubsequence(strSeq1,strSeq2)  
-                            dist=len(temp)
-                               
-                            # Add metric for all axes, it gives a full states determination
-                            if dist!=0:
-                                permutation_matrix[k][l][s][p*a_len+a] += log10(strSeq2_freq) + log10(dist)
-                                #permutation_matrix[k][l][s][p*a_len+a] += 1.0/log10(strSeq2_freq) + pow(dist,2) # TODO Need to add condition for zero difsion
-                                #permutation_matrix[k][l][s][p*a_len+a] += 1.0/strSeq2_freq + pow(dist,2)
-                    permutation_matrix[k][l][s][p*a_len+a] *= scalar
-                    
+                        # Get iith list as a single string for training data for current level/state/axis
+                        strSeq_train     = ''.join(lcss_trials_mat[kk][ll][ss][aa][ii][0])
+                        if strSeq_train!=[]: # TODO check for leftover emtpy lists (need to fix)
+                        
+                            ## Check for equality                                      
+                            if strSeq_validate==strSeq_train: 
+                                similarity=len(strSeq_train)
+                                strSeq_train_freq= lcss_trials_mat[kk][ll][ss][aa][ii][1]
+                                
+                                # Add metric for all axes, it gives a full states determination
+                                if similarity!=0:
+                                    similarity_permutation_matrix[kk][ll][ss][pp*a_len+aa] += log10(strSeq_train_freq) + log10(similarity)
+                                    #similarity_permutation_matrix[kk][ll][ss][pp*a_len+aa] += 1.0/log10(strSeq_train_freq) + pow(similarity,2) # TODO Need to add condition for zero difsion
+                                    #similarity_permutation_matrix[kk][ll][ss][pp*a_len+aa] += 1.0/strSeq_train_freq + pow(similarity,2)                                        
                     
     # Save Permutation Metric
     #pickle
-#    with open(classification_dir+'/'+permutation_matrix_pickle, 'wb') as handle:
-#        pickle.dump(sim_state_metric, handle, protocol=pickle.HIGHEST_PROTOCOL) 
-#           
-#    # Save binary numpy to file (maybe more efficient than pickle and can be opened with np.loadtxt)
-#    fd = open(os.path.join(classification_dir,permutation_matrix_pickle[:-7]+'.txt'), "wb")
-#    np.save(fd,sim_state_metric)  
-#    fd.close()                 
+    with open(classification_dir+'/'+permutation_matrix_pickle, 'wb') as handle:
+        pickle.dump(sim_state_metric, handle, protocol=pickle.HIGHEST_PROTOCOL) 
+           
+    # Save binary numpy to file (maybe more efficient than pickle and can be opened with np.loadtxt)
+    fd = open(os.path.join(classification_dir,permutation_matrix_pickle[:-7]+'.txt'), "wb")
+    np.save(fd,sim_state_metric)  
+    fd.close()                 
      
                    
     # Similarity State Metric
     # Compute sum of similarities across axes for each fold/state/level (1x24)->(1x4)
-    for k in range(kfold):
-        for l in range(l_len):
-            for s in range(s_len): 
-                for p,a in itertools.product( range(s_len),range(a_len) ):                    
-                    sim_state_metric[k][l][s][p] += permutation_matrix[k][l][s][p*a_len+a]                   
+    for kk in range(kfold):
+        for ll in range(l_len):
+            for ss in range(s_len): 
+                for pp,aa in itertools.product( range(s_len),range(a_len) ):                    
+                    sim_state_metric[kk][ll][ss][pp] += similarity_permutation_matrix[kk][ll][ss][pp*a_len+aa]                   
 
                         
     # Save Similarity State Metric
@@ -1150,7 +1119,11 @@ if lcss:
             avg_prob_vector[l][s]/=float(kfold)        
             
             # Now we want to normalize the 4 values per given state
-            avg_prob_vector[l][s]=np.true_divide(avg_prob_vector[l][s],np.sum(avg_prob_vector[l][s]))
+            fold_sum=np.sum(avg_prob_vector[l][s])
+            if fold_sum != 0:
+                avg_prob_vector[l][s]=np.true_divide(avg_prob_vector[l][s],fold_sum)
+            else:
+               avg_prob_vector[l][s]=np.zeros( (s_len,1) )
             
     # Save avg_prob_vector_pickle
     #pickle
