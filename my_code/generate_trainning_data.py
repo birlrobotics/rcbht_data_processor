@@ -24,7 +24,7 @@ def main():
     ## Flags
     successAndFailFlag=1
     hlStatesFlag=1
-    output_per_one_trial_flag=0 # if true, output is performed for each trial for all axis. Otherwise all trials for each axis is displayed.
+    output_per_one_trial_flag=1 # if true, output is performed for each trial for all axis. Otherwise all trials for each axis is displayed.
 
     # What kind of success_strategy will you analyze
     success_strategy='SIM_HIRO_ONE_SA_SUCCESS'
@@ -200,6 +200,13 @@ def main():
             output_features.output_sample_one_trial(file_for_success_set, '1', allTrialLabels)
         else:
             output_features.output_sample_all_trial(file_for_success_set, 's', allTrialLabels, allTrialLabels.keys(), len(allTrialLabels), os.path.join(base_dir, '..', 'my_training_data',success_strategy))
+
+        dict_dims={}
+        dict_all={}
+        allTrialLabels={}
+        data_folder_names=[]        
+        orig_data_folder_names=[]
+        failure_data_folder_names=[]
 
         #output data for fail
         dict_all = fail_dict_all
