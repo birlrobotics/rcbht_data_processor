@@ -48,8 +48,7 @@ def output_sample_one_trial(file, label, dict_all):
         for level in dict_cooked_from_folder:
             for axis in dict_cooked_from_folder[level]:
                 if dict_cooked_from_folder[level][axis] == None:
-                   raise Exception("empty axis data"); 
-                
+                    continue 
                 # Extract all features for a level/axis and create a list. Use the list to write to file. 
                 import inc.label_mapping as label_mapping
                 list_of_features = [label_mapping.label_mapping_dict[level][i] for i in dict_cooked_from_folder[level][axis]]
