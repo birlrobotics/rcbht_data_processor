@@ -4,7 +4,7 @@ def extract_features(folder_dict,dimension_dict,sliceLabels):
     llbehavior_dict = folder_dict['llbehavior']
 
     keys = ['Fx', 'Fy', 'Fz', 'Mx', 'My', 'Mz']
-    
+
     # Use the maximum number of iterations that showed up for all axis (could also work with single axis)
     if sliceLabels:
         for key in keys:
@@ -23,8 +23,8 @@ def iteration_mapper(x):
 		return [x['t2End'], x['Label']]
 	else:
 		return [x['t2End'], x['CompLabel']]
-  
-'''Extract corresponding label, start and end time. Sort wrt time. Then, 
+
+'''Extract corresponding label, start and end time. Sort wrt time. Then,
 slice all the data into equal intervals to have same length'''
 def slice_and_find_mode(level, dicts_cooked_from_iterations, slice):
 	if slice == 0:
@@ -45,8 +45,8 @@ def slice_and_find_mode(level, dicts_cooked_from_iterations, slice):
 		label_key      = 'CompLabel'
 		end_time_key   = 't2End'
 		start_time_key = 't1Start'
-  
-	#sort according to start time	
+
+	#sort according to start time
 	dicts_cooked_from_iterations = sorted(dicts_cooked_from_iterations, key=lambda x:x[start_time_key])
      #Get start time of first iternation
 	start_time = dicts_cooked_from_iterations[0][start_time_key]
@@ -57,7 +57,7 @@ def slice_and_find_mode(level, dicts_cooked_from_iterations, slice):
      # Get the duration of the experiment for a specified RCBHT level
 	time_length = iterations[-1][0]
 	iteration_amount = len(iterations)
-	
+
 	s = 1
 	slice_end = time_length*s/slice #slice an entire task in n slices
 	count_dict = {}
@@ -68,7 +68,7 @@ def slice_and_find_mode(level, dicts_cooked_from_iterations, slice):
      ## Properly partition data
 	while idx < iteration_amount:
 		i = iterations[idx]
-		if i[0] >= slice_end: # This time mark is greater than our slice, keep label and continue to slice 
+		if i[0] >= slice_end: # This time mark is greater than our slice, keep label and continue to slice
 			safe_add(i[1], slice_end-last_i_end, count_dict)
 
 			result.append(get_mode(count_dict))
@@ -82,7 +82,7 @@ def slice_and_find_mode(level, dicts_cooked_from_iterations, slice):
 			safe_add(i[1], i[0]-last_i_end, count_dict)
 			last_i_end = i[0]
 			idx += 1
- 
+
 	if len(result) != slice:
 		print iterations
 		print result
