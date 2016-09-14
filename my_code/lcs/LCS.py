@@ -1,9 +1,13 @@
 #!/usr/bin/python
 ######################################################################
-# Determine the score of the longest common sequence. 
+# Determine the score of the longest common sequence.
 # Authored by: Hane1818
 # Modified by Juan Rojas
 ######################################################################
+# Compute intersection/union
+def jaccard(s1,s2):
+    similarity = float(len(s1.intersection(s2)))/float(len(s1.union(s2)))
+    return similarity
 
 def longestCommonSequence(a, b):
     a_len, b_len=len(a),len(b)
@@ -29,7 +33,7 @@ def longestCommonSequence(a, b):
 ######################################################################
 # Determine the score of the longest common subsequence of two strings
 # students: complete this function. Subsequence implies skipping
-# over letters that are not contained in the other string but which 
+# over letters that are not contained in the other string but which
 # are followed by more letters that are.
 # Authored by: Victoria O'Neill and Matthew Farr
 # Modified by Juan Rojas
@@ -108,7 +112,7 @@ def longestCommonSubsequence(s1, s2):
                     directions[y][x] = "D"
                else:
                     directions[y][x] = "T"
-     
+
      # Print out table (only useful for small tables - used for debugging)
      # Comment out when you are satisfied that the algorithm is working
      #printTable(costs, "costs.txt")
@@ -131,7 +135,7 @@ def createTable(numRows, numCols, value):
      row = 0
      # create 2D table initialized with value
      while (row < numRows):
-          table.append([])    
+          table.append([])
           col = 0
           while (col < numCols):
                table[row].append(value)
@@ -163,11 +167,11 @@ def printTable(table, filename):
      file.close()
 
      return
-	
+
 
 ################################################################
 # Reconstruct the optimal alignment and print the alignment
-# to a file. Because the sequences can be long, print the 
+# to a file. Because the sequences can be long, print the
 # alignment 50 characters on one line, the other string of 50 characters
 # on the next line, and then skip one line, as follows:
 # AATT--GGCTATGCT--C-G-TTACGCA-TTACT-AA-TCCGGTC-AGGC
@@ -183,17 +187,17 @@ def printTable(table, filename):
 ###############################################################
 def align(direction, s1, s2, row, col, filename):
     DB_PRINT=0
-    lcs=''    
+    lcs=''
     if DB_PRINT:
         file = open(filename, 'w')
-        
+
      # Set x and y coordinates for traversing the direction table
      # at the end of the highest common subsequence, and initializes
      # the subsequence strings as empty
     x = col
     y = row
     currentDir = direction[y][x]
-             
+
 
     # Traverse the table until the top left corner of the table
     # is encountered
@@ -211,7 +215,7 @@ def align(direction, s1, s2, row, col, filename):
          # in the table, and add a character from the strings to the
          # lcs
          elif direction[y][x] == "D":
-              lcs = s1[x-1] + lcs               
+              lcs = s1[x-1] + lcs
               x-=1
               y-=1
          # Get next direction index from current position in the table
