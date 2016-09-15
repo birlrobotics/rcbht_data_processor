@@ -22,13 +22,13 @@ DB_PRINT=0
 
 def main():
     ## Flags
-    successAndFailFlag=1
+    successAndFailFlag=0
     hlStatesFlag=1
     output_per_one_trial_flag=1 # if true, output is performed for each trial for all axis. Otherwise all trials for each axis is displayed.
 
     # What kind of success_strategy will you analyze
-    success_strategy='SIM_HIRO_ONE_SA_SUCCESS'
-    failure_strategy="SIM_HIRO_ONE_SA_ERROR_CHARAC_Prob"
+    success_strategy='REAL_HIRO_ONE_SA_SUCCESS'
+    failure_strategy="REAL_HIRO_ONE_SA_ERROR_CHARAC"
     strategy=success_strategy # default value. used in hblstates
 
     # lists
@@ -144,7 +144,7 @@ def main():
 
         # Remove undesired folders
         for data_folder_name in orig_data_folder_names:
-            if data_folder_name[:2] == 'ex' or data_folder_name[:2] == 'FC':
+            if data_folder_name[:1] == 'x':
                 failure_data_folder_names.append(data_folder_name)   
                 
         
