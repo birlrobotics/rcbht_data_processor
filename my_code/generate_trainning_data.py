@@ -196,7 +196,7 @@ def main():
             data_feature_extractor.extract_features(dict_all[data_folder_name],folder_dims)
             allTrialLabels[data_folder_name]=deepcopy(dict_all[data_folder_name])  
         if output_per_one_trial_flag:
-            output_features.output_sample_one_trial(file_for_SF_classification, '1', allTrialLabels, os.path.join(base_dir,'..', 'my_training_data', "img_of_success.eps"))
+            output_features.output_sample_one_trial(file_for_SF_classification, '1', allTrialLabels, os.path.join(base_dir,'..', 'my_training_data', "img_of_success.png"))
         else:
             output_features.output_sample_all_trial(file_for_SF_classification, 's', allTrialLabels, allTrialLabels.keys(), len(allTrialLabels), os.path.join(base_dir, '..', 'my_training_data',success_strategy))
 
@@ -213,7 +213,7 @@ def main():
             data_feature_extractor.extract_features(dict_all[data_folder_name],folder_dims)
             allTrialLabels[data_folder_name]=deepcopy(dict_all[data_folder_name])  
         if output_per_one_trial_flag:
-            output_features.output_sample_one_trial(file_for_SF_classification, '0', allTrialLabels, os.path.join(base_dir,'..', 'my_training_data', "img_of_fail.eps")); 
+            output_features.output_sample_one_trial(file_for_SF_classification, '0', allTrialLabels, os.path.join(base_dir,'..', 'my_training_data', "img_of_fail.png")); 
         else:
             output_features.output_sample_all_trial(file_for_SF_classification, 'f', allTrialLabels, allTrialLabels.keys(), len(allTrialLabels), os.path.join(base_dir, '..', 'my_training_data',failure_strategy))
 
@@ -238,12 +238,9 @@ def main():
         from inc.states import states
         files_for_states = {}
         
-
-        file_for_states_classification = open(os.path.join(base_dir,'..', 'my_training_data', "training_set_for_states"), 'w')    
-
         # Open files for each of the states we will analyze
         for state in states:
-            files_for_states[state] = file_for_states_classification 
+            files_for_states[state] = open(os.path.join(base_dir,'..', 'my_training_data', strategy, "training_set_for_"+state), 'w')    
 
         data_folder_prefix = os.path.join(results_dir, success_strategy)
         orig_data_folder_names = os.listdir(data_folder_prefix)
@@ -310,7 +307,7 @@ def main():
                 # Write labels and images to file. 2 choices: individual iterations or all iterations per state.
                 # label 1 indicates SUCCESS. Have a file and a place to put images
                 if output_per_one_trial_flag:
-                    output_features.output_sample_one_trial(files_for_states[state], str(states.index(state)), allTrialLabels[state], os.path.join(base_dir,'..', 'my_training_data', "img_of_"+state+".eps"))
+                    output_features.output_sample_one_trial(files_for_states[state], str(states.index(state)), allTrialLabels[state], os.path.join(base_dir,'..', 'my_training_data', "img_of_"+state+".png"))
                 else:
                     output_features.output_sample_all_trial(files_for_states[state], state, allTrialLabels[state], data_folder_names, numTrials, os.path.join(base_dir, '..', 'my_training_data',hlb_dir))
         else:
