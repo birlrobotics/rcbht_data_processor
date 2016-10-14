@@ -48,7 +48,7 @@ def main():
     allTrialLabels={}
 
     # Set program paths
-    results_dir="/Users/sklaw_mba/Desktop/ex/dr_juan_proj/data"
+    results_dir="/Users/sklaw_mba/Desktop/ex/dr_juan_proj/workshop/data"
     cur_dir = os.path.dirname(os.path.realpath(__file__))
     base_dir = cur_dir
     os.chdir(base_dir)
