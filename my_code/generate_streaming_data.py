@@ -12,6 +12,7 @@ import shutil
 from copy import deepcopy
 
 import util.output_features                     as output_features
+import util.output_streaming_experiments        as output_streaming_experiments
 import data_parser.data_folder_parser           as data_folder_parser
 import feature_extractor.data_feature_extractor as data_feature_extractor
 
@@ -62,6 +63,8 @@ def main():
     else:
         shutil.rmtree(os.path.join(base_dir, '..', directory))
         os.makedirs(os.path.join(base_dir, '..', directory))
+
+    streaming_exp_dir = os.path.join(base_dir, '..', directory)
 
     if successAndFailFlag:
         strategy=success_strategy    
@@ -150,11 +153,17 @@ def main():
 
         for data_folder_name in success_dict_all:
             import experiment_streamer.experiment_streamer as experiment_streamer
-            experiment_streamer.stream_one_experiment(success_dict_all[data_folder_name])
+            array_of_streaming_dicts = experiment_streamer.stream_one_experiment(success_dict_all[data_folder_name])
+            for idx in range(len(array_of_streaming_dicts)):
+                data_feature_extractor.extract_features(array_of_streaming_dicts[idx], folder_dims) 
+            output_streaming_experiments.output_one_streaming_exp(streaming_exp_dir, "success", data_folder_name, array_of_streaming_dicts)    
 
         for data_folder_name in fail_dict_all:
             import experiment_streamer.experiment_streamer as experiment_streamer
-            experiment_streamer.stream_one_experiment(success_dict_all[data_folder_name])
+            array_of_streaming_dicts = experiment_streamer.stream_one_experiment(success_dict_all[data_folder_name])
+            for idx in range(len(array_of_streaming_dicts)):
+                data_feature_extractor.extract_features(array_of_streaming_dicts[idx], folder_dims) 
+            output_streaming_experiments.output_one_streaming_exp(streaming_exp_dir, "failure", data_folder_name, array_of_streaming_dicts)    
 
     #-------------------------------------------------------------------------
     ## Parse information by State 
@@ -225,6 +234,8 @@ def main():
         for data_folder_name in dict_all:
             for state in states:
                 import experiment_streamer.experiment_streamer as experiment_streamer
-                experiment_streamer.stream_one_experiment(dict_all[data_folder_name][state])
-      
+                array_of_streaming_dicts = experiment_streamer.stream_one_experiment(dict_all[data_folder_name][state])
+                for idx in range(len(array_of_streaming_dicts)):
+                    data_feature_extractor.extract_features(array_of_streaming_dicts[idx], folder_dims) 
+                output_streaming_experiments.output_one_streaming_exp(streaming_exp_dir, state, data_folder_name, array_of_streaming_dicts)    
 main();

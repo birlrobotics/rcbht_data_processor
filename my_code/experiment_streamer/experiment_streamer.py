@@ -72,7 +72,7 @@ def stream_one_experiment(dict_of_one_experiment):
                     last_end_time += streaming_interval 
 
             streams_count = len(dict_for_streaming_axes[level][axis])
-            print "streams_count:\t", streams_count
+            #print "streams_count:\t", streams_count
 
     array_of_streaming_dicts = []
 
@@ -84,4 +84,5 @@ def stream_one_experiment(dict_of_one_experiment):
                 now_streaming_dict[level][axis] = dict_for_streaming_axes[level][axis][i]
         array_of_streaming_dicts.append(now_streaming_dict)
 
-    print_and_verify_things(dict_of_one_experiment, array_of_streaming_dicts)
+    #print_and_verify_things(dict_of_one_experiment, array_of_streaming_dicts)
+    return array_of_streaming_dicts

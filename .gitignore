@@ -4,4 +4,4 @@ my_training_data/
 *.pyc
 .*
 !.gitignore
-my_training_data_std/
+my_streaming_experiments/
