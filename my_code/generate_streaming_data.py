@@ -28,8 +28,8 @@ def main():
     hlStatesFlag=1
 
     # What kind of success_strategy will you analyze
-    success_strategy='REAL_HIRO_ONE_SA_SUCCESS'
-    failure_strategy="REAL_HIRO_ONE_SA_ERROR_CHARAC"
+    success_strategy='SIM_HIRO_ONE_SA_SUCCESS'
+    failure_strategy="SIM_HIRO_ONE_SA_ERROR_CHARAC_prob"
     strategy=success_strategy # default value. used in hblstates
 
 
@@ -42,7 +42,6 @@ def main():
     # Folder names
     data_folder_names=[]        # Filtered to only take relevant folders
     orig_data_folder_names=[]
-    failure_data_folder_names=[]
 
     # Dictionary building blocks
     folder_dims={}
@@ -77,8 +76,7 @@ def main():
         
         # Remove undesired folders
         for data_folder_name in orig_data_folder_names:
-            if data_folder_name[:2] == '20':
-                data_folder_names.append(data_folder_name)
+            data_folder_names.append(data_folder_name)
                 
         
         
@@ -98,7 +96,15 @@ def main():
             success_dict_all = dict_all;
         else:
             raise Exception('The success dictionary dict_all is empty') 
-        
+
+        # Clear up
+        folder_dims={}
+        dict_dims={}
+        dict_all={}
+        allTrialLabels={}
+        data_folder_names=[]        
+        orig_data_folder_names=[]
+    
     #-------------------------------------------------------------------------
     ##FAILURE ANALYSIS
     #------------------------------------------------------------------------_
@@ -111,12 +117,11 @@ def main():
 
         # Remove undesired folders
         for data_folder_name in orig_data_folder_names:
-            if data_folder_name[:1] == 'x':
-                failure_data_folder_names.append(data_folder_name)   
+            data_folder_names.append(data_folder_name)   
                 
         
         # Get full path for each folder name
-        for data_folder_name in failure_data_folder_names:
+        for data_folder_name in data_folder_names:
             data_folder_full_path = os.path.join(data_folder_prefix, data_folder_name)
             if DB_PRINT:
                 print data_folder_full_path
@@ -154,17 +159,31 @@ def main():
         for data_folder_name in success_dict_all:
             import experiment_streamer.experiment_streamer as experiment_streamer
             array_of_streaming_dicts = experiment_streamer.stream_one_experiment(success_dict_all[data_folder_name])
+            if array_of_streaming_dicts == None:
+                print data_folder_name, "cannot be streamed."
+                continue
             for idx in range(len(array_of_streaming_dicts)):
                 data_feature_extractor.extract_features(array_of_streaming_dicts[idx], folder_dims) 
             output_streaming_experiments.output_one_streaming_exp(streaming_exp_dir, "success", data_folder_name, array_of_streaming_dicts)    
 
         for data_folder_name in fail_dict_all:
             import experiment_streamer.experiment_streamer as experiment_streamer
-            array_of_streaming_dicts = experiment_streamer.stream_one_experiment(success_dict_all[data_folder_name])
+            array_of_streaming_dicts = experiment_streamer.stream_one_experiment(fail_dict_all[data_folder_name])
+            if array_of_streaming_dicts == None:
+                print data_folder_name, "cannot be streamed."
+                continue
             for idx in range(len(array_of_streaming_dicts)):
                 data_feature_extractor.extract_features(array_of_streaming_dicts[idx], folder_dims) 
             output_streaming_experiments.output_one_streaming_exp(streaming_exp_dir, "failure", data_folder_name, array_of_streaming_dicts)    
 
+        # Clear up
+        folder_dims={}
+        dict_dims={}
+        dict_all={}
+        allTrialLabels={}
+        data_folder_names=[]        
+        orig_data_folder_names=[]
+ 
     #-------------------------------------------------------------------------
     ## Parse information by State 
     #-------------------------------------------------------------------------
@@ -172,7 +191,6 @@ def main():
         # Folder names
         data_folder_names=[]        # Filtered to only take relevant folders
         orig_data_folder_names=[]
-        failure_data_folder_names=[]
 
         # Dictionary building blocks
         folder_dims={}
@@ -190,8 +208,7 @@ def main():
         
         # Remove undesired folders
         for data_folder_name in orig_data_folder_names:
-            if data_folder_name[:2] == '20':
-                data_folder_names.append(data_folder_name)  
+            data_folder_names.append(data_folder_name)  
                 
         numTrials=len(data_folder_names)
                 
@@ -235,6 +252,9 @@ def main():
             for state in states:
                 import experiment_streamer.experiment_streamer as experiment_streamer
                 array_of_streaming_dicts = experiment_streamer.stream_one_experiment(dict_all[data_folder_name][state])
+                if array_of_streaming_dicts == None:
+                    print data_folder_name, "cannot be streamed."
+                    continue
                 for idx in range(len(array_of_streaming_dicts)):
                     data_feature_extractor.extract_features(array_of_streaming_dicts[idx], folder_dims) 
                 output_streaming_experiments.output_one_streaming_exp(streaming_exp_dir, state, data_folder_name, array_of_streaming_dicts)    

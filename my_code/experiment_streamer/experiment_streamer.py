@@ -17,7 +17,7 @@ import inc.config as config
         }
 '''
 
-streaming_interval = 1#second
+streaming_interval = 0.5#second
 
 def print_and_verify_things(dict_of_one_experiment, array_of_streaming_dicts):
     level_to_check = config.levels[2]
@@ -33,6 +33,8 @@ def print_and_verify_things(dict_of_one_experiment, array_of_streaming_dicts):
 
 def stream_one_experiment(dict_of_one_experiment):
     dict_for_streaming_axes = {}
+
+    streams_count = -1 
 
     timeLengthOfThisExp = -1;
     for level in config.levels:
@@ -70,9 +72,12 @@ def stream_one_experiment(dict_of_one_experiment):
                     new_streaming_axis[-1][config.endtimeKeyQueryDict[level]] = last_end_time+streaming_interval
                     dict_for_streaming_axes[level][axis].append(new_streaming_axis)
                     last_end_time += streaming_interval 
-
-            streams_count = len(dict_for_streaming_axes[level][axis])
-            #print "streams_count:\t", streams_count
+            if streams_count == -1: 
+                streams_count = len(dict_for_streaming_axes[level][axis])
+            elif len(dict_for_streaming_axes[level][axis]) != streams_count:
+                print "a bad exp with different streams count"
+                return None
+    
 
     array_of_streaming_dicts = []
 

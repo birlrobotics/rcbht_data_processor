@@ -4,9 +4,6 @@ from PIL import Image
 kelly_colors_hex = color_plate.kelly_colors_hex
 
 def output_one_streaming_exp(base_dir, class_name, experiment_name, array_of_streaming_dicts):
-    print "protective drop"
-    return
-    print "have fun!" 
     output_pixels = []
 
     if not os.path.exists(os.path.join(base_dir, class_name)):
@@ -18,7 +15,7 @@ def output_one_streaming_exp(base_dir, class_name, experiment_name, array_of_str
             base_dir, 
             class_name, 
             experiment_name, 
-            "output_file_for_streams.txt"
+            "file_of_one_stream.txt"
         ),
         "w"
     )
@@ -28,7 +25,7 @@ def output_one_streaming_exp(base_dir, class_name, experiment_name, array_of_str
             for axis in one_streaming_dict[level]:
                 import inc.label_mapping as label_mapping
                 list_of_features = [label_mapping.label_mapping_dict[level][i] for i in one_streaming_dict[level][axis]]
-                output_file_for_streams.write(','.join(list_of_features))
+                output_file_for_streams.write(','.join(list_of_features)+",")
                 output_pixels += [kelly_colors_hex[int(i)] for i in list_of_features]
         output_file_for_streams.write('\n')
 
@@ -45,6 +42,6 @@ def output_one_streaming_exp(base_dir, class_name, experiment_name, array_of_str
             base_dir, 
             class_name, 
             experiment_name, 
-            "output_img__for_streams.png"
+            "img_of_one_stream.png"
         )
     )

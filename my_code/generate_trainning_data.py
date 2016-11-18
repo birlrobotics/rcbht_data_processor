@@ -22,13 +22,13 @@ DB_PRINT=0
 
 def main():
     ## Flags
-    successAndFailFlag=0
+    successAndFailFlag=1
     hlStatesFlag=1
     output_per_one_trial_flag=1 # if true, output is performed for each trial for all axis. Otherwise all trials for each axis is displayed.
 
     # What kind of success_strategy will you analyze
-    success_strategy='REAL_HIRO_ONE_SA_SUCCESS'
-    failure_strategy="REAL_HIRO_ONE_SA_ERROR_CHARAC"
+    success_strategy='SIM_HIRO_ONE_SA_SUCCESS'
+    failure_strategy="SIM_HIRO_ONE_SA_ERROR_CHARAC_prob"
     strategy=success_strategy # default value. used in hblstates
 
     # lists
@@ -39,7 +39,6 @@ def main():
     # Folder names
     data_folder_names=[]        # Filtered to only take relevant folders
     orig_data_folder_names=[]
-    failure_data_folder_names=[]
 
     # Dictionary building blocks
     folder_dims={}
@@ -95,8 +94,7 @@ def main():
         
         # Remove undesired folders
         for data_folder_name in orig_data_folder_names:
-            if data_folder_name[:2] == '20':
-                data_folder_names.append(data_folder_name)
+            data_folder_names.append(data_folder_name)
                 
         
         
@@ -131,7 +129,6 @@ def main():
         allTrialLabels={}
         data_folder_names=[]        
         orig_data_folder_names=[]
-        failure_data_folder_names=[]
     #-------------------------------------------------------------------------
     ##FAILURE ANALYSIS
     #------------------------------------------------------------------------_
@@ -144,12 +141,11 @@ def main():
 
         # Remove undesired folders
         for data_folder_name in orig_data_folder_names:
-            if data_folder_name[:1] == 'x':
-                failure_data_folder_names.append(data_folder_name)   
+            data_folder_names.append(data_folder_name)   
                 
         
         # Get full path for each folder name
-        for data_folder_name in failure_data_folder_names:
+        for data_folder_name in data_folder_names:
             data_folder_full_path = os.path.join(data_folder_prefix, data_folder_name)
             if DB_PRINT:
                 print data_folder_full_path
@@ -174,7 +170,6 @@ def main():
         allTrialLabels={}
         data_folder_names=[]        
         orig_data_folder_names=[]
-        failure_data_folder_names=[]
 
         for level in levels:
             folder_dims[level] = {}
@@ -196,16 +191,14 @@ def main():
             data_feature_extractor.extract_features(dict_all[data_folder_name],folder_dims)
             allTrialLabels[data_folder_name]=deepcopy(dict_all[data_folder_name])  
         if output_per_one_trial_flag:
-            output_features.output_sample_one_trial(file_for_SF_classification, '1', allTrialLabels, os.path.join(base_dir,'..', 'my_training_data', "img_of_success.png"))
-        else:
-            output_features.output_sample_all_trial(file_for_SF_classification, 's', allTrialLabels, allTrialLabels.keys(), len(allTrialLabels), os.path.join(base_dir, '..', 'my_training_data',success_strategy))
+            file_for_S_classification = open(os.path.join(base_dir, '..', 'my_training_data', 'training_set_of_success'), 'w')
+            output_features.output_sample_one_trial(file_for_S_classification, '1', allTrialLabels, os.path.join(base_dir,'..', 'my_training_data', "img_of_success.png"))
 
         dict_dims={}
         dict_all={}
         allTrialLabels={}
         data_folder_names=[]        
         orig_data_folder_names=[]
-        failure_data_folder_names=[]
 
         #output data for fail
         dict_all = fail_dict_all
@@ -213,9 +206,8 @@ def main():
             data_feature_extractor.extract_features(dict_all[data_folder_name],folder_dims)
             allTrialLabels[data_folder_name]=deepcopy(dict_all[data_folder_name])  
         if output_per_one_trial_flag:
-            output_features.output_sample_one_trial(file_for_SF_classification, '0', allTrialLabels, os.path.join(base_dir,'..', 'my_training_data', "img_of_fail.png")); 
-        else:
-            output_features.output_sample_all_trial(file_for_SF_classification, 'f', allTrialLabels, allTrialLabels.keys(), len(allTrialLabels), os.path.join(base_dir, '..', 'my_training_data',failure_strategy))
+            file_for_F_classification = open(os.path.join(base_dir, '..', 'my_training_data', 'training_set_of_fail'), 'w')
+            output_features.output_sample_one_trial(file_for_F_classification, '0', allTrialLabels, os.path.join(base_dir,'..', 'my_training_data', "img_of_fail.png")); 
 
         # Clear up
         folder_dims={}
@@ -224,7 +216,6 @@ def main():
         allTrialLabels={}
         data_folder_names=[]        
         orig_data_folder_names=[]
-        failure_data_folder_names=[]
 
 
 
@@ -247,8 +238,7 @@ def main():
         
         # Remove undesired folders
         for data_folder_name in orig_data_folder_names:
-            if data_folder_name[:2] == '20':
-                data_folder_names.append(data_folder_name)  
+            data_folder_names.append(data_folder_name)  
                 
         numTrials=len(data_folder_names)
                 
@@ -287,14 +277,14 @@ def main():
             # Then only return the labels.
             # Currently we take the max number of iterations in any given trial/level/axis.
             allTrialLabels={}
-            for data_folder_name in data_folder_names:
+            for data_folder_name in dict_all:
                 for state in states:                
                     data_feature_extractor.extract_features(dict_all[data_folder_name][state], folder_dims)                                                                                          
                 
             # Create the allTrialsLables structure. It is organized by: state/trials/level/axis. Only contains labels.
             for state in states:
                 allTrialLabels[state]={}
-                for data_folder_name in data_folder_names:
+                for data_folder_name in dict_all:
                     allTrialLabels[state][data_folder_name]={}                        
                     allTrialLabels[state][data_folder_name]=deepcopy(dict_all[data_folder_name][state])                        
                         
@@ -308,8 +298,6 @@ def main():
                 # label 1 indicates SUCCESS. Have a file and a place to put images
                 if output_per_one_trial_flag:
                     output_features.output_sample_one_trial(files_for_states[state], str(states.index(state)), allTrialLabels[state], os.path.join(base_dir,'..', 'my_training_data', "img_of_"+state+".png"))
-                else:
-                    output_features.output_sample_all_trial(files_for_states[state], state, allTrialLabels[state], data_folder_names, numTrials, os.path.join(base_dir, '..', 'my_training_data',hlb_dir))
         else:
                 raise Exception('dict_all from hlb states is not available')
         folder_dims={}
@@ -318,6 +306,5 @@ def main():
         allTrialLabels={}
         data_folder_names=[] 
         orig_data_folder_names=[]
-        failure_data_folder_names=[]
 
 main();
