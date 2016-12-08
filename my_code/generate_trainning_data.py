@@ -27,7 +27,7 @@ def main():
     output_per_one_trial_flag=1 # if true, output is performed for each trial for all axis. Otherwise all trials for each axis is displayed.
 
     # What kind of success_strategy will you analyze
-    success_strategy='SIM_HIRO_ONE_SA_SUCCESS'
+    success_strategy='REAl_HIRO_ONE_SA_SUCCESS'
     failure_strategy="SIM_HIRO_ONE_SA_ERROR_CHARAC_prob"
     strategy=success_strategy # default value. used in hblstates
 
