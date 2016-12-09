@@ -5,3 +5,4 @@ my_training_data/
 .*
 !.gitignore
 my_streaming_experiments/
+training_data_of_failure_classes
