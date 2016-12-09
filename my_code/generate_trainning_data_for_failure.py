@@ -8,12 +8,14 @@ import data_parser.data_folder_parser           as data_folder_parser
 import feature_extractor.data_feature_extractor as data_feature_extractor
 
 import traceback,sys#,code
-from inc.config import states, levels, axes
+from inc.config import states, levels, axes, failure_class_name_to_id
 
 def classify_folder(folder_name):
     import re
-    class_name = re.sub('[\dFC\.]', '', folder_name)
+    class_name = re.sub('[^\+\-xyr]', '', folder_name)
     return class_name
+
+    
         
 
 def main():
@@ -72,13 +74,14 @@ def main():
         group_by_class[class_name][data_folder_name] = dict_all[data_folder_name]
             
         
+    os.makedirs(os.path.join(base_dir, '..', result_directory, data_folder))
     for class_name in group_by_class:
         for data_folder_name in group_by_class[class_name]:        
             print data_folder_name
             data_feature_extractor.extract_features(group_by_class[class_name][data_folder_name], folder_dims)
         signature = 'training_set_of_failure_class_%s' % class_name
-        f = open(os.path.join(base_dir, '..', result_directory, signature), 'w')
-        output_features.output_sample_one_trial(f, '1', group_by_class[class_name], os.path.join(base_dir,'..', result_directory, "%s.png"%signature))
+        f = open(os.path.join(base_dir, '..', result_directory, data_folder, signature), 'w')
+        output_features.output_sample_one_trial(f, str(failure_class_name_to_id[class_name]), group_by_class[class_name], os.path.join(base_dir,'..', result_directory, data_folder, "%s.png"%signature))
 
 
 main();
