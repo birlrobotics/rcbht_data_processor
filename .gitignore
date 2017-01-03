@@ -1,8 +1,10 @@
 # Folders
-my_training_data/
 *.py~
 *.pyc
 .*
+my_streaming_experiments/*
+my_training_data/*
+training_data_of_failure_classes/*
 !.gitignore
-my_streaming_experiments/
-training_data_of_failure_classes
+!.gitkeep
+
