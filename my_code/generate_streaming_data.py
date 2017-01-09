@@ -28,7 +28,7 @@ def main():
     hlStatesFlag=1
 
     # What kind of success_strategy will you analyze
-    success_strategy='REAL_HIRO_ONE_SA_SUCCESS'
+    success_strategy='SIM_HIRO_ONE_SA_SUCCESS'
     failure_strategy="SIM_HIRO_ONE_SA_ERROR_CHARAC_prob"
     strategy=success_strategy # default value. used in hblstates
 
