@@ -29,12 +29,7 @@ def main():
     os.chdir(base_dir)
 
     # my training data
-    result_directory ='training_data_of_failure_classes'
-    if not os.path.exists(os.path.join(base_dir, '..', result_directory)):
-        os.makedirs(os.path.join(base_dir, '..', result_directory))
-    else:
-        shutil.rmtree(os.path.join(base_dir, '..', result_directory))
-        os.makedirs(os.path.join(base_dir, '..', result_directory))
+    result_directory ='my_training_data'
 
     data_folder_prefix = os.path.join(base_data_dir, data_folder)
         
