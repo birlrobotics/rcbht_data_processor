@@ -1,10 +1,3 @@
-''' Currently this program requires clean data set. Meaning: 3 folders only: Segments, 
-Composites, and llBehaviors. Each folder must have only 6 files associated with _Fx, 
-_Fy, _Fz, _Mx, _My, and _Mz. There should also be a State.dat file outside the three folders.
-If more data is encountered it will not be processed at this time.'''
-
-
-
 import os
 import shutil
 

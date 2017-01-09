@@ -14,7 +14,9 @@ global DB_PRINT
 DB_PRINT=0
 
 def main():
-    output_per_one_trial_flag=1 # if true, output is performed for each trial for all axis. Otherwise all trials for each axis is displayed.
+    from inc.config import states
+    from inc.config import levels 
+    from inc.config import axes 
 
     # What kind of success_strategy will you analyze
     success_strategy='SIM_HIRO_ONE_SA_SUCCESS'
@@ -39,9 +41,7 @@ def main():
     strategy=success_strategy    
     #generate training data from SIM to classify automata states
 
-    from inc.config import states
-    from inc.config import levels 
-    from inc.config import axes 
+
     files_for_states = {}
     
     # Open files for each of the states we will analyze

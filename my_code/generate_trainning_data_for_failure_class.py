@@ -15,12 +15,9 @@ def classify_folder(folder_name):
     class_name = re.sub('[^\+\-xyr]', '', folder_name)
     return class_name
 
-    
-        
-
 def main():
     ## Flags
-    data_folder = "SIM_HIRO_ONE_SA_ERROR_CHARAC_prob"
+    failure_strategy = "SIM_HIRO_ONE_SA_ERROR_CHARAC_prob"
 
     # Set program paths
     base_data_dir="/Users/sklaw_mba/Desktop/ex/dr_juan_proj/workshop/data"
@@ -31,7 +28,7 @@ def main():
     # my training data
     result_directory ='my_training_data'
 
-    data_folder_prefix = os.path.join(base_data_dir, data_folder)
+    data_folder_prefix = os.path.join(base_data_dir, failure_strategy)
         
     data_folder_names = os.listdir(data_folder_prefix)
 
@@ -69,14 +66,16 @@ def main():
         group_by_class[class_name][data_folder_name] = dict_all[data_folder_name]
             
         
-    os.makedirs(os.path.join(base_dir, '..', result_directory, data_folder))
+    hlb_dir=failure_strategy
+    if not os.path.exists(os.path.join(base_dir, '..', 'my_training_data', hlb_dir)):
+        os.makedirs(os.path.join(base_dir, '..', 'my_training_data', hlb_dir))
     for class_name in group_by_class:
         for data_folder_name in group_by_class[class_name]:        
             print data_folder_name
             data_feature_extractor.extract_features(group_by_class[class_name][data_folder_name], folder_dims)
         signature = 'training_set_of_failure_class_%s' % class_name
-        f = open(os.path.join(base_dir, '..', result_directory, data_folder, signature), 'w')
-        output_features.output_sample_one_trial(f, str(failure_class_name_to_id[class_name]), group_by_class[class_name], os.path.join(base_dir,'..', result_directory, data_folder, "%s.png"%signature))
+        f = open(os.path.join(base_dir, '..', result_directory, failure_strategy, signature), 'w')
+        output_features.output_sample_one_trial(f, str(failure_class_name_to_id[class_name]), group_by_class[class_name], os.path.join(base_dir,'..', result_directory, failure_strategy, "%s.png"%signature))
 
 
 main();
