@@ -38,6 +38,7 @@ def main():
         data_folder_full_path = os.path.join(data_folder_prefix, data_folder_name)
         dict_cooked_from_folder = data_folder_parser.parse_folder(data_folder_full_path)
         if dict_cooked_from_folder == None:
+            print "parsing", data_folder_name, "returns None" 
             continue
         else:
             dict_all[data_folder_name]=dict_cooked_from_folder
