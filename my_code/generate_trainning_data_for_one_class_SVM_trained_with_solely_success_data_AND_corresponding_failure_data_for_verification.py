@@ -69,11 +69,13 @@ def main():
         if DB_PRINT:
             print data_folder_full_path
         
-        dict_cooked_from_folder = data_folder_parser.parse_folder(data_folder_full_path)
+
+        # we only extract the first state -- approach, since all failure data we got now belong to the first state.
+        dict_cooked_from_folder = data_folder_parser.parse_folder(data_folder_full_path, split_by_states=True)
         if dict_cooked_from_folder == None:
             continue
         else:
-            dict_all[data_folder_name]=dict_cooked_from_folder
+            dict_all[data_folder_name]=dict_cooked_from_folder["approach"]
 
     if bool(dict_all):
         success_dict_all = dict_all;
