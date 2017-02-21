@@ -15,7 +15,15 @@ cur_dir = os.path.dirname(os.path.realpath(__file__))
 base_dir = os.path.join(cur_dir, '..')
 os.chdir(base_dir)
 
-def parse_folder(folder_path, split_by_states = False):
+def parse_folder(folder_path, split_by_states = False, which_arm="right"):
+    import re
+    if which_arm == "right":
+        file_pattern = '[a-zA-Z0-9]+_[a-zA-Z0-9]+.txt'
+    else:
+        file_pattern = "[a-zA-Z0-9]+_[a-zA-Z0-9]+_L.txt"
+
+    file_name_checker = re.compile(file_pattern)
+
     dict_cooked_from_folder = {}
 
     dict_for_folder_path = {}
@@ -33,8 +41,14 @@ def parse_folder(folder_path, split_by_states = False):
     for level in ['primitive', 'composite', 'llbehavior']:
         dict_cooked_from_folder[level] = {}
         for file_name in os.listdir(dict_for_folder_path[level]):
-      
-                # Extract Fx,Fy,...,Mz. TODO: Separate right from left
+            check_result = file_name_checker.match(file_name)
+            if check_result:
+                pass
+            else:
+                print "%s is passed"%(file_name,)
+                continue
+ 
+            # Extract Fx,Fy,...,Mz. TODO: Separate right from left
             axis = file_name.split('_')[1][:2]
             file_path = os.path.join(dict_for_folder_path[level], file_name)
             file = open(file_path, 'r') # open the corresponding data file
