@@ -86,11 +86,11 @@ def main():
             if DB_PRINT:
                 print data_folder_full_path
             
-            dict_cooked_from_folder = data_folder_parser.parse_folder(data_folder_full_path, split_by_states=True)
+            dict_cooked_from_folder = data_folder_parser.parse_folder(data_folder_full_path)
             if dict_cooked_from_folder == None:
                 continue
             else:
-                dict_all[data_folder_name]=dict_cooked_from_folder["approach"]
+                dict_all[data_folder_name]=dict_cooked_from_folder
 
         if bool(dict_all):
             success_dict_all = dict_all;
@@ -146,7 +146,7 @@ def main():
                 folder_dims[level][axis]=0
 
         #cook folder_dims for both success&fail samples
-        for dict_all in [success_dict_all]:
+        for dict_all in [success_dict_all, fail_dict_all]:
             for data_folder_name in dict_all:
                 for level in levels:
                     for axis in axes: 
