@@ -19,7 +19,7 @@ def main():
     from inc.config import axes 
     # What kind of success_strategy will you analyze
     success_strategy='SIM_HIRO_ONE_SA_SUCCESS'
-    failure_strategy="SIM_HIRO_ONE_SA_ERROR_CHARAC_prob"
+    failure_strategy="SIM_HIRO_ONE_SA_ERROR_CHARAC"
     strategy=success_strategy # default value. used in hblstates
 
     # Folder names
@@ -68,7 +68,8 @@ def main():
         data_folder_full_path = os.path.join(data_folder_prefix, data_folder_name)
         if DB_PRINT:
             print data_folder_full_path
-        
+       
+        print data_folder_full_path 
         dict_cooked_from_folder = data_folder_parser.parse_folder(data_folder_full_path)
         if dict_cooked_from_folder == None:
             continue
@@ -112,6 +113,7 @@ def main():
             print data_folder_full_path
         
         # Get dictionary cooked from all folders
+        print data_folder_full_path 
         dict_cooked_from_folder = data_folder_parser.parse_folder(data_folder_full_path)        
         if dict_cooked_from_folder == None:
             continue

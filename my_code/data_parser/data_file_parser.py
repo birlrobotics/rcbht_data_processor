@@ -1,21 +1,28 @@
 def parse_file(file):
-    iteration_texts = file.read().replace('\r', '').strip().split('\n\n') # split data by carriage return and by two new lines
+    iteration_texts = file.read().replace('\r', '').strip()
+
+    iter_head = "Iteration"
+    iteration_count = None
 
     dicts_cooked_from_iterations = []
-     # Now strip each individual "iteration" block from file
-    iteration_count = None
-    for iteration_text in iteration_texts:
-        iteration_text = iteration_text.strip()
-        if iteration_text == '':
-            continue
+
+    now_iter_start = iteration_texts.find(iter_head, 0)
+    while now_iter_start != -1:
+        next_iter_start = iteration_texts.find(iter_head, now_iter_start+len(iter_head))
+        if next_iter_start == -1:
+            iteration_text = iteration_texts[now_iter_start:]
+        else:
+            iteration_text = iteration_texts[now_iter_start: next_iter_start].strip()
         dict_cooked_from_iteration = mapper_text_to_dict(iteration_text)
 
         if iteration_count is None:
             iteration_count = dict_cooked_from_iteration['Iteration']
-
+        
         if dict_cooked_from_iteration['Iteration'] == iteration_count: # Save the iteration info to the dictionary
             dicts_cooked_from_iterations.append(dict_cooked_from_iteration)
             iteration_count += 1
+
+        now_iter_start = next_iter_start
 
     if len(dicts_cooked_from_iterations) == 0:
         print 'bad file with no axis data.'
@@ -30,9 +37,10 @@ def mapper_text_to_dict(iteration_text):
     dict_cooked_from_iteration = {}
     iteration_lines = iteration_text.split('\n')
     for i in iteration_lines:
-        key, val = i.split(':')
-
-
+        items = i.split(':')
+        if len(items) != 2:
+            continue
+        key, val = items
         key = key.strip()
         val = val.strip()
         try :
