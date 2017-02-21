@@ -19,7 +19,7 @@ def main():
     from inc.config import axes 
 
     # What kind of success_strategy will you analyze
-    success_strategy='SIM_HIRO_ONE_SA_SUCCESS'
+    success_strategy='REAL_HIRO_ONE_SA_SUCCESS'
     strategy=success_strategy # default value. used in hblstates
 
     # Folder names
@@ -113,7 +113,7 @@ def main():
             output_features.output_sample_one_trial(files_for_states[state], 
                 str(states.index(state)), 
                 allTrialLabels[state], 
-                os.path.join(base_dir,'..', 'my_training_data', hlb_dir, "img_of_"+state+".png"))
+                os.path.join(base_dir,'..', 'my_training_data', hlb_dir, "img_of_"+state))
     else:
             raise Exception('dict_all from hlb states is not available')
 

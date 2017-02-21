@@ -35,7 +35,8 @@ def output_sample_one_trial(file, label, dict_all, img_path):
     output_img.putdata(output_pixels)
     zoom = 1 
     output_img = output_img.resize((img_width*zoom, img_height*zoom))
-    output_img.save(img_path)
+    output_img.save(img_path+".png")
+    output_img.save(img_path+".eps")
 
 
 # Prints one image for each axis of all trials. 

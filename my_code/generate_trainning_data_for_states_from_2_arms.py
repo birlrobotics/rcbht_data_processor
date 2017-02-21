@@ -112,7 +112,7 @@ def main():
                 output_features.output_sample_one_trial(files_for_states[state], 
                     str(states.index(state)), 
                     allTrialLabels[state], 
-                    os.path.join(base_dir,'..', 'my_training_data', hlb_dir, now_arm, "img_of_"+state+".png"))
+                    os.path.join(base_dir,'..', 'my_training_data', hlb_dir, now_arm, "img_of_"+state))
 
                 files_for_states[state].close()
 
@@ -171,5 +171,6 @@ def main():
         zoom = 1 
         output_img = output_img.resize((img_width*zoom, img_height*zoom))
         output_img.save(os.path.join(base_dir,'..', 'my_training_data', hlb_dir, combined_folder, "img_of_"+state+".png"))
+        output_img.save(os.path.join(base_dir,'..', 'my_training_data', hlb_dir, combined_folder, "img_of_"+state+".eps"))
 
 main();

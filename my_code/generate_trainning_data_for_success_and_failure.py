@@ -18,8 +18,8 @@ def main():
     from inc.config import levels 
     from inc.config import axes 
     # What kind of success_strategy will you analyze
-    success_strategy='SIM_HIRO_ONE_SA_SUCCESS'
-    failure_strategy="SIM_HIRO_ONE_SA_ERROR_CHARAC"
+    success_strategy='REAL_HIRO_ONE_SA_SUCCESS'
+    failure_strategy="REAL_HIRO_ONE_SA_ERROR_CHARAC"
     strategy=success_strategy # default value. used in hblstates
 
     # Folder names
@@ -154,7 +154,7 @@ def main():
         data_feature_extractor.extract_features(dict_all[data_folder_name],folder_dims)
         allTrialLabels[data_folder_name]=deepcopy(dict_all[data_folder_name])  
     file_for_S_classification = open(os.path.join(base_dir, '..', 'my_training_data', success_strategy, 'training_set_of_success'), 'w')
-    output_features.output_sample_one_trial(file_for_S_classification, '1', allTrialLabels, os.path.join(base_dir,'..', 'my_training_data', success_strategy, "img_of_success.png"))
+    output_features.output_sample_one_trial(file_for_S_classification, '1', allTrialLabels, os.path.join(base_dir,'..', 'my_training_data', success_strategy, "img_of_success"))
 
     dict_dims={}
     dict_all={}
@@ -168,7 +168,7 @@ def main():
         data_feature_extractor.extract_features(dict_all[data_folder_name],folder_dims)
         allTrialLabels[data_folder_name]=deepcopy(dict_all[data_folder_name])  
     file_for_F_classification = open(os.path.join(base_dir, '..', 'my_training_data', failure_strategy, 'training_set_of_fail'), 'w')
-    output_features.output_sample_one_trial(file_for_F_classification, '0', allTrialLabels, os.path.join(base_dir,'..', 'my_training_data', failure_strategy, "img_of_fail.png")); 
+    output_features.output_sample_one_trial(file_for_F_classification, '0', allTrialLabels, os.path.join(base_dir,'..', 'my_training_data', failure_strategy, "img_of_fail")); 
 
     # Clear up
     folder_dims={}
