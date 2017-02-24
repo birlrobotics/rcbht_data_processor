@@ -27,9 +27,11 @@ def main():
     successAndFailFlag=1
     hlStatesFlag=1
 
+    data_type = "SIM"
+
     # What kind of success_strategy will you analyze
-    success_strategy='SIM_HIRO_ONE_SA_SUCCESS'
-    failure_strategy="SIM_HIRO_ONE_SA_ERROR_CHARAC_prob"
+    success_strategy = data_type+'_HIRO_ONE_SA_SUCCESS'
+    failure_strategy = data_type+"_HIRO_ONE_SA_ERROR_CHARAC"
     strategy=success_strategy # default value. used in hblstates
 
 
@@ -57,13 +59,10 @@ def main():
 
     # my training data
     directory='my_streaming_experiments'
-    if not os.path.exists(os.path.join(base_dir, '..', directory)):
-        os.makedirs(os.path.join(base_dir, '..', directory))
-    else:
-        shutil.rmtree(os.path.join(base_dir, '..', directory))
-        os.makedirs(os.path.join(base_dir, '..', directory))
+    if not os.path.exists(os.path.join(base_dir, '..', directory, data_type)):
+        os.makedirs(os.path.join(base_dir, '..', directory, data_type))
 
-    streaming_exp_dir = os.path.join(base_dir, '..', directory)
+    streaming_exp_dir = os.path.join(base_dir, '..', directory, data_type)
 
     if successAndFailFlag:
         strategy=success_strategy    
