@@ -2,9 +2,6 @@
 *.py~
 *.pyc
 .*
-my_streaming_experiments/*
-my_training_data/*
-training_data_of_failure_classes/*
 !.gitignore
 !.gitkeep
 
