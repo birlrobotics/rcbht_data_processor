@@ -17,7 +17,7 @@ import inc.config as config
         }
 '''
 
-streaming_interval = 0.5#second
+streaming_interval = 0.1#second
 
 def print_and_verify_things(dict_of_one_experiment, array_of_streaming_dicts):
     level_to_check = config.levels[2]

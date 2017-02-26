@@ -18,6 +18,7 @@ import feature_extractor.data_feature_extractor as data_feature_extractor
 
 import traceback,sys#,code
 
+
 # Globals
 global DB_PRINT
 DB_PRINT=0
@@ -27,7 +28,7 @@ def main():
     successAndFailFlag=1
     hlStatesFlag=1
 
-    data_type = "SIM"
+    data_type = "REAL"
 
     # What kind of success_strategy will you analyze
     success_strategy = data_type+'_HIRO_ONE_SA_SUCCESS'
@@ -57,12 +58,13 @@ def main():
     base_dir = cur_dir
     os.chdir(base_dir)
 
+    import experiment_streamer.experiment_streamer as experiment_streamer
     # my training data
     directory='my_streaming_experiments'
-    if not os.path.exists(os.path.join(base_dir, '..', directory, data_type)):
-        os.makedirs(os.path.join(base_dir, '..', directory, data_type))
+    if not os.path.exists(os.path.join(base_dir, '..', directory, "stream_interval_"+str(experiment_streamer.streaming_interval), data_type)):
+        os.makedirs(os.path.join(base_dir, '..', directory, "stream_interval_"+str(experiment_streamer.streaming_interval), data_type))
 
-    streaming_exp_dir = os.path.join(base_dir, '..', directory, data_type)
+    streaming_exp_dir = os.path.join(base_dir, '..', directory, "stream_interval_"+str(experiment_streamer.streaming_interval), data_type)
 
     if successAndFailFlag:
         strategy=success_strategy    
@@ -156,7 +158,7 @@ def main():
         print "model feature extraction for S&F will and must use folder_dims:", folder_dims
 
         for data_folder_name in success_dict_all:
-            import experiment_streamer.experiment_streamer as experiment_streamer
+
             array_of_streaming_dicts = experiment_streamer.stream_one_experiment(success_dict_all[data_folder_name])
             if array_of_streaming_dicts == None:
                 print data_folder_name, "cannot be streamed."
@@ -166,7 +168,7 @@ def main():
             output_streaming_experiments.output_one_streaming_exp(streaming_exp_dir, "success", data_folder_name, array_of_streaming_dicts)    
 
         for data_folder_name in fail_dict_all:
-            import experiment_streamer.experiment_streamer as experiment_streamer
+
             array_of_streaming_dicts = experiment_streamer.stream_one_experiment(fail_dict_all[data_folder_name])
             if array_of_streaming_dicts == None:
                 print data_folder_name, "cannot be streamed."
