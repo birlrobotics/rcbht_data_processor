@@ -40,5 +40,5 @@ This repo serves as a "data cooker" that it can process/stream robot data so tha
     The generated graphs are stored in:
     * ./torque_plots
 
-# realated repo
+# related repo
 The repo in charge of training and online classification is https://github.com/birlrobotics/parse_rcbht_data_online_classification.git
