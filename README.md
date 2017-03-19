@@ -40,4 +40,4 @@ This repo serves as a "data cooker" that it can process/stream robot data so tha
     * ./torque_plots
 
 # related repo
-The repo in charge of training and online classification is https://github.com/birlrobotics/parse_rcbht_data_online_classification.git
+The repo in charge of training and online classification is https://github.com/birlrobotics/rcbht_training_and_online_classification
