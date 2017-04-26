@@ -33,7 +33,7 @@ def main():
     allTrialLabels={}
 
     # Set program paths
-    results_dir="/Users/sklaw_mba/Desktop/ex/dr_juan_proj/workshop/data"
+    results_dir="../../../data_zero"
     cur_dir = os.path.dirname(os.path.realpath(__file__))
     base_dir = cur_dir
     os.chdir(base_dir)
@@ -170,6 +170,9 @@ def main():
     file_for_F_classification = open(os.path.join(base_dir, '..', 'my_training_data', failure_strategy, 'training_set_of_fail'), 'w')
     output_features.output_sample_one_trial(file_for_F_classification, '0', allTrialLabels, os.path.join(base_dir,'..', 'my_training_data', failure_strategy, "img_of_fail")); 
 
+    import pickle
+    pickle.dump(folder_dims, open(os.path.join(base_dir,'..', 'my_training_data', failure_strategy, "SF_layer_dims.pkl"), "wb"))
+
     # Clear up
     folder_dims={}
     dict_dims={}
@@ -177,7 +180,5 @@ def main():
     allTrialLabels={}
     data_folder_names=[]        
     orig_data_folder_names=[]
-
-
 
 main();

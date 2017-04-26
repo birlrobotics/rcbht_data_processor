@@ -33,7 +33,7 @@ def main():
     allTrialLabels={}
 
     # Set program paths
-    results_dir="/Users/sklaw_mba/Desktop/ex/dr_juan_proj/workshop/data"
+    results_dir="../../../data_zero"
     cur_dir = os.path.dirname(os.path.realpath(__file__))
     base_dir = cur_dir
     os.chdir(base_dir)
@@ -114,6 +114,9 @@ def main():
                 str(states.index(state)), 
                 allTrialLabels[state], 
                 os.path.join(base_dir,'..', 'my_training_data', hlb_dir, "img_of_"+state))
+
+        import pickle
+        pickle.dump(folder_dims, open(os.path.join(base_dir,'..', 'my_training_data', hlb_dir, "state_layer_dims.pkl"), "wb"))
     else:
             raise Exception('dict_all from hlb states is not available')
 
