@@ -2,7 +2,7 @@ def parse_file(file):
     iteration_texts = file.read().replace('\r', '').strip()
 
     iter_head = "Iteration"
-    iteration_count = None
+    iteration_count = 1
 
     dicts_cooked_from_iterations = []
 
@@ -15,9 +15,10 @@ def parse_file(file):
             iteration_text = iteration_texts[now_iter_start: next_iter_start].strip()
         dict_cooked_from_iteration = mapper_text_to_dict(iteration_text)
 
-        if iteration_count is None:
-            iteration_count = dict_cooked_from_iteration['Iteration']
-        
+        if dict_cooked_from_iteration['Iteration'] == 1:
+            dicts_cooked_from_iterations = []
+            iteration_count = 1
+
         if dict_cooked_from_iteration['Iteration'] == iteration_count: # Save the iteration info to the dictionary
             dicts_cooked_from_iterations.append(dict_cooked_from_iteration)
             iteration_count += 1

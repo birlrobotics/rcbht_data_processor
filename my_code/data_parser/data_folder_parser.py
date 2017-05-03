@@ -122,12 +122,13 @@ def splitor(dict_cooked_from_folder, state_time_mark):
                      # Extract data for pertinent level and axis
             dicts_cooked_from_iterations = dict_cooked_from_folder[level][axis]
             iter_amount = len(dicts_cooked_from_iterations)
+            state_amount = len(state_time_mark)
 
             state_idx = 0
             iter_idx = 0
 
                     # Separate data per state
-            while iter_idx < iter_amount:
+            while iter_idx < iter_amount and state_idx < state_amount:
                 iter_end_time = dicts_cooked_from_iterations[iter_idx][end_time_key]
                 if iter_end_time < state_time_mark[state_idx]:
                     dict_with_states[states[state_idx]][level][axis].append(dicts_cooked_from_iterations[iter_idx])
